@@ -1,0 +1,60 @@
+/*
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  position: relative;
+  width: 960px;
+}
+
+text {
+  font: 10px sans-serif;
+}
+
+form {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+*/
+
+.container {
+  margin: 0;
+  padding: 0;
+}
+
+.top-buffer {
+  margin-top: 40px;
+}
+
+.bottom-buffer {
+  margin-bottom: 20px;
+}
+
+div.progress {
+  margin-bottom: 0px;
+}
+
+.extra-info {
+  cursor: pointer;
+}
+
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.table-condensed>tbody>tr>td {
+  padding: 0px !important;
+}
+
+.mono-space {
+  font-family:monospace;
+}
+
+div.popover{
+  /* Max Width of the popover (depending on the container!) */
+  max-width: 100%;
+}

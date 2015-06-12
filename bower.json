@@ -1,0 +1,25 @@
+{
+  "name": "hbase-region-inspector",
+  "version": "0.1.0",
+  "authors": [
+    "Junegunn Choi <junegunn.c@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.4",
+    "react": "~0.13.3",
+    "underscore": "~1.8.3",
+    "d3": "~3.5.5",
+    "jquery": "~2.1.4"
+  },
+  "install": {
+    "path": "resources/public/vendor"
+  }
+}
