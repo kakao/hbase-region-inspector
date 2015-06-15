@@ -212,7 +212,7 @@ RegionByServer.Row = React.createClass({
             {regions.map(function(r) {
               var width = this.props.max == 0 ? 0 :
                 100 * r[metric] / localSum * this.props.sum / this.props.max;
-              return width == 0 ? "" : (
+              return width <= 0 ? "" : (
                 <div className="progress-bar extra-info"
                      key={r['encoded-name']}
                      style={{width: width + '%',
@@ -299,7 +299,7 @@ RegionByTable.Row = React.createClass({
             <tbody>
             {this.props.regions.map(function(r) {
               var width = max == 0 ? 0 : 100 * r[this.props.metric] / max;
-              return (
+              return width <= 0 ? "" : (
                 <tr key={r['encoded-name']}>
                   <td className="text-muted mono-space col-xs-3">
                     <span data-content={r.html} className="extra-info">
