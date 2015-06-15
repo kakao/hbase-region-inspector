@@ -299,6 +299,7 @@ RegionByTable.Row = React.createClass({
             <tbody>
             {this.props.regions.map(function(r) {
               var width = max == 0 ? 0 : 100 * r[this.props.metric] / max;
+              var val = r[this.props.metric];
               return width <= 0 ? "" : (
                 <tr key={r['encoded-name']}>
                   <td className="text-muted mono-space col-xs-3">
@@ -312,7 +313,7 @@ RegionByTable.Row = React.createClass({
                            style={{width: width + '%',
                                    color: r.color[1],
                                    backgroundColor: r.color[0]}}>
-                        {r[this.props.metric].toFixed(2)}
+                        {val > 10 ? val : val.toFixed(2)}
                       </div>
                     </div>
                   </td>
