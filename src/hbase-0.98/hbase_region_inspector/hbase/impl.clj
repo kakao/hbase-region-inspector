@@ -1,27 +1,11 @@
-(ns hbase-region-inspector.hbase
-  (:require [clojure.pprint :refer [pprint]]
-            [clojure.set :as set])
-  (:import org.apache.hadoop.hbase.client.HBaseAdmin
-           org.apache.hadoop.hbase.HBaseConfiguration
-           org.apache.hadoop.hbase.util.Bytes
+(ns hbase-region-inspector.hbase.impl
+  (:require [clojure.set :as set])
+  (:import org.apache.hadoop.hbase.util.Bytes
            java.nio.ByteBuffer))
 
-;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
-(defn- connect-admin [zk]
-  (HBaseAdmin.
-    (doto (HBaseConfiguration/create)
-      (.set "hbase.zookeeper.quorum" zk)
-      (.setInt "hbase.client.retries.number" 0)
-      (.setInt "hbase.regions.slop" 0)
-      (.setInt "zookeeper.recovery.retry" 0))))
+;; http://archive.cloudera.com/cdh5/cdh/5/hbase-0.98.6-cdh5.3.3/apidocs/index.html
 
-(defmacro admin-let
-  [[name zk] & body]
-  `(let [admin# (~connect-admin ~zk)
-         ~name admin#]
-     (try (doall ~@body) (finally (.close admin#)))))
-
-(defn- info->map
+(defn info->map
   "Builds map from HRegionInfo"
   [info]
   {:encoded-name (.getEncodedName info)
@@ -30,7 +14,7 @@
    :end-key      (Bytes/toStringBinary (.getEndKey info))
    :meta?        (.isMetaRegion info)})
 
-(defn- load->map
+(defn load->map
   "Builds map from RegionLoad"
   [load]
   {:compacted-kvs              (.getCurrentCompactedKVs load)
@@ -65,8 +49,8 @@
     {}
     (for [[region-name load]
           (->> server-name
-               (.getLoad cluster-status)
-               (.getRegionsLoad))]
+               (.getLoad cluster-status) ; HServerLoad
+               (.getRegionsLoad))]       ; byte[] -> RegionLoad
       [(ByteBuffer/wrap region-name) (load->map load)])))
 
 (defn collect-region-info
