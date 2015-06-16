@@ -53,6 +53,19 @@
     [(hsl->rgb h s l)
      (hsl->rgb h s (- l 0.2))]))
 
+(defn local-ip-address
+  "Returns the first local IPv4 address"
+  []
+  (let [addrs (->> (java.net.NetworkInterface/getNetworkInterfaces)
+                   enumeration-seq
+                   (filter #(.isUp %))
+                   (remove #(.isLoopback %))
+                   (mapcat #(enumeration-seq (.getInetAddresses %)))
+                   (filter #(instance? java.net.Inet4Address %))
+                   (map #(.getHostAddress %)))]
+    (or (first addrs) "127.0.0.1")))
+
+;; Use hand-crafted logger functions instead of tools.logging
 (defn- log [type message]
   (println (format "%s: %s: %s" (java.util.Date.) type message)))
 (defn info [message] (log "INFO" message))

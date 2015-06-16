@@ -212,7 +212,8 @@
     (util/info "Start periodic update process")
     (start-periodic-updater!))
   ;; Start web server
-  (util/info (format "Starting web server (port: %d)" port))
+  (util/info (format "Starting web server: http://%s:%d"
+                     (util/local-ip-address) port))
   (run-jetty app {:port port}))
 
 (defn exit [message]
