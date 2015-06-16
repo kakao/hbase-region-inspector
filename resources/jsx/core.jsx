@@ -168,7 +168,7 @@ var RegionByServer = React.createClass({
         {servers.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No servers found</div>
         }
-        <table className="table table-condensed">
+        <table className="table table-condensed barchart">
           <tbody>
           {servers.map(function(server) {
             return <RegionByServer.Row key={server.name} metric={this.props.metric} parent={this} callback={this.setTable} {...server} />
@@ -310,7 +310,7 @@ RegionByTable.Row = React.createClass({
       <div className="row">
         <div className="col-xs-12">
           <h4>{this.props.name} <small>{this.props.sum}</small></h4>
-          <table className="table table-condensed">
+          <table className="table table-condensed barchart">
             <tbody>
             {this.props.regions.map(function(r) {
               var width = max == 0 ? 0 : 100 * r[this.props.metric] / max;

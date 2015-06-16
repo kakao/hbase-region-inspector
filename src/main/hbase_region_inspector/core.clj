@@ -36,29 +36,41 @@
         kb #(format "%d KB" (long %))
         rate #(format "%.2f" (double %))]
     (case type
-      :store-file-size-mb         (mb val)
-      :store-uncompressed-size-mb (mb val)
-      :store-file-index-size-mb   (mb val)
-      :memstore-size-mb           (mb val)
-      :requests-rate              (rate val)
-      :read-requests-rate         (rate val)
-      :write-requests-rate        (rate val)
-      :root-index-size-kb         (kb val)
-      :bloom-size-kb              (kb val)
-      :total-index-size-kb        (kb val)
-      val)))
+      :start-key                  ["Start key" val]
+      :end-key                    ["End key" val]
+      :store-file-size-mb         ["Compressed" (mb val)]
+      :store-uncompressed-size-mb ["Uncompressed" (mb val)]
+      :store-file-index-size-mb   ["Index" (mb val)]
+      :memstore-size-mb           ["Memstore" (mb val)]
+      :requests-rate              ["Requests/sec" (rate val)]
+      :read-requests-rate         ["Reads/sec" (rate val)]
+      :write-requests-rate        ["Writes/sec" (rate val)]
+      :root-index-size-kb         ["Root index" (kb val)]
+      :bloom-size-kb              ["Bloom filter" (kb val)]
+      :total-index-size-kb        ["Total index" (kb val)]
+      :compaction                 ["Compaction" (apply format "%d / %d" val)]
+      [(util/keyword->str (str type)) val])))
 
 (defn build-html
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
   [props]
-  (let [{:keys [table encoded-name]} props
-        rest (dissoc props :table :encoded-name :name)]
+  (let [{:keys [table encoded-name]} props]
     (h/html
       [:h3 table " " [:small encoded-name]]
       [:table {:class "table table-condensed table-striped"}
-       (map #(identity [:tr
-                        [:td (first %)]
-                        [:td (apply format-val %)]]) rest)])))
+       [:tbody
+        (map #(let [[k v] (format-val % (% props))] [:tr [:th k] [:td v]])
+             (filter
+               #(% props)
+               [:start-key :end-key
+                :store-file-size-mb :store-uncompressed-size-mb
+                :requests
+                :read-requests
+                :write-requests
+                :requests-rate
+                :read-requests-rate
+                :write-requests-rate
+                :compaction]))]])))
 
 (defn regions
   "Collects the information of online regions"
@@ -119,7 +131,7 @@
                             [table (reduce #(+ %1 (metric %2)) 0 regions)]))
         ;; List of maps with table-level sums
         list-with-sum (map #(assoc (zipmap [:name :regions] %)
-                                   :sum (format-val metric (grouped-sum (first %))))
+                                   :sum (last (format-val metric (grouped-sum (first %)))))
                            grouped)
         ;; Sort regions in each partition by start key
         locally-sorted (map #(update-in % [:regions]
@@ -150,7 +162,8 @@
                             %
                             :requests-rate (diff-fn % :requests)
                             :write-requests-rate (diff-fn % :write-requests)
-                            :read-requests-rate (diff-fn % :read-requests))
+                            :read-requests-rate (diff-fn % :read-requests)
+                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
                          new-regions)
         ;; Build HTML for popover and assign color
         new-regions (map #(assoc %

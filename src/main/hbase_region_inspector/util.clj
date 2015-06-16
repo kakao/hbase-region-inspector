@@ -65,6 +65,14 @@
                    (map #(.getHostAddress %)))]
     (or (first addrs) "127.0.0.1")))
 
+(defn keyword->str
+  [keyword]
+  (-> keyword
+      clojure.core/str
+      (str/replace #"[:-]" " ")
+      str/trim
+      str/capitalize))
+
 ;; Use hand-crafted logger functions instead of tools.logging
 (defn- log [type message]
   (println (format "%s: %s: %s" (java.util.Date.) type message)))

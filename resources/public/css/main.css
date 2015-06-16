@@ -49,7 +49,7 @@ div.progress {
   shape-rendering: crispEdges;
 }
 
-.table-condensed>tbody>tr>td {
+.barchart>tbody>tr>td {
   padding: 0px !important;
 }
 
