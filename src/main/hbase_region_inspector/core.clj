@@ -90,10 +90,6 @@
         all-tables (keys (reverse (sort-by
                                     #(reduce + (map metric (last %)))
                                     all-tables)))
-        ;; Build popover description
-        all-regions (map #(assoc % :html (build-html %)) all-regions)
-        ;; Assign colors to the regions according to their table
-        all-regions (map #(assoc % :color (color-for-table (:table %))) all-regions)
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
                      (sort-by first util/compare-server-names
@@ -122,10 +118,6 @@
   (let [metric (or metric :store-file-size-mb)
         ;; Exclude hbase:meta table
         all-regions (filter (complement :meta?) (:regions @cached))
-        ;; Build popover description
-        all-regions (map #(assoc % :html (build-html %)) all-regions)
-        ;; Assign colors to the regions according to their table
-        all-regions (map #(assoc % :color (color-for-table (:table %))) all-regions)
         ;; Group regions by table name
         grouped (group-by :table all-regions)
         ;; Calculate the sum for each group
@@ -166,6 +158,11 @@
                             :requests-rate (diff-fn % :requests)
                             :write-requests-rate (diff-fn % :write-requests)
                             :read-requests-rate (diff-fn % :read-requests))
+                         new-regions)
+        ;; Build HTML for popover and assign color
+        new-regions (map #(assoc %
+                                 :html (build-html %)
+                                 :color (color-for-table (:table %)))
                          new-regions)]
     (reset! cached {:updated-at now
                     :regions new-regions})))
