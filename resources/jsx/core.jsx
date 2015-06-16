@@ -10,8 +10,17 @@ function refreshApp(menu, opts) {
 
   var url = menu == "rs" ? "/server_regions.json" : "/table_regions.json"
   debug(opts)
-  $.get(url, opts, function(result) {
-    React.render(<App {...opts} menu={menu} result={result}/>, document.body);
+  $.ajax({
+    url: url,
+    data: opts,
+    success: function(result) {
+      React.render(<App {...opts} menu={menu} result={result}/>, document.body);
+    },
+    error: function(jqXHR, text, error) {
+      debug(jqXHR, text, error);
+      React.render(<App {...opts} menu="error" error={error}/>, document.body);
+    },
+    timeout: 10000
   });
 }
 
@@ -47,7 +56,7 @@ var App = React.createClass({
                 <li className={this.props.menu == "rs" ? "active" : ""}>
                   <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>Region servers</a>
                 </li>
-                <li className={this.props.menu != "rs" ? "active" : ""}>
+                <li className={this.props.menu == "table" ? "active" : ""}>
                   <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tb")}>Tables</a>
                 </li>
               </ul>
@@ -61,7 +70,13 @@ var App = React.createClass({
           </div>
         </nav>
         <div className="container">
-          {this.props.menu == "rs" ? <RegionByServer {...this.props}/> : <RegionByTable {...this.props}/>}
+          {this.props.menu == "error" ? (
+            <div className="alert alert-danger" role="alert">
+              <h5>
+                <span className="label label-danger">{this.props.error.toUpperCase()}</span> Failed to collect data from server
+              </h5>
+            </div>
+          ) : this.props.menu == "rs" ? <RegionByServer {...this.props}/> : <RegionByTable {...this.props}/>}
         </div>
       </div>
     );

@@ -38,6 +38,9 @@ div.progress {
   cursor: pointer;
 }
 
+.label {
+  margin-right: 5px;
+}
 
 .axis path,
 .axis line {
