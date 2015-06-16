@@ -29,13 +29,6 @@
           (swap! palette assoc table new-color)
           new-color))))
 
-(defn silence-of-log4j
-  "To suppress superfluous log messages from HBaseAdmin"
-  []
-  (doto (java.util.Properties.)
-    (.setProperty "log4j.threshold" "ERROR")
-    (org.apache.log4j.PropertyConfigurator/configure)))
-
 (defn format-val
   "String formatter for region properties"
   [type val]
@@ -210,8 +203,6 @@
           (route/not-found "404")))
 
 (defn- bootstrap [zk port bg]
-  ;; Suppress log messages from HBase
-  (silence-of-log4j)
   ;; Make sure that we can connect to the given ZooKeeper quorum before
   ;; starting background process
   (reset! zookeeper zk)
