@@ -218,7 +218,7 @@
        (hbase/admin-let
          [admin @zookeeper]
          (.move admin (.getBytes region) (.getBytes dest))
-         (loop [tries 10
+         (loop [tries 20
                 message (format "Moving %s from %s to %s" region src dest)]
            (util/info message)
            (when (> tries 0)
