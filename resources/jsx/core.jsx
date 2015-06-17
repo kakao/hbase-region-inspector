@@ -5,6 +5,20 @@ function debug() {
   // console.log.apply(console, arguments);
 }
 
+function disablePopover() {
+  $(".extra-info").popover('disable')
+}
+
+function enablePopover() {
+  $(".extra-info").popover({
+    trigger:   "hover",
+    html:      true,
+    placement: "right",
+    container: "body"
+  });
+  $(".extra-info").popover('enable')
+}
+
 function refreshApp(menu, opts) {
   clearTimeout(refreshTimeout);
 
@@ -15,6 +29,83 @@ function refreshApp(menu, opts) {
     data: opts,
     success: function(result) {
       React.render(<App {...opts} menu={menu} result={result}/>, document.body);
+      $(".draggable").draggable({
+        helper: 'clone',
+        revert: 'invalid',
+        revertDuration: 200,
+        start: function(e, ui) {
+          var orig = $(e.target);
+          disablePopover();
+          ui.helper.width(orig.width()).height(orig.height()).css({
+            'border-width':       "2px",
+            'border-color':       orig.css("color"),
+            'border-style':       'solid',
+            '-webkit-transition': 'none',
+            '-moz-transition':    'none',
+            '-ms-transition':     'none',
+            '-o-transition':      'none',
+            'transition':         'none'
+          });
+          orig.hide();
+        },
+        stop: function(e, ui) {
+          $(e.target).show();
+          enablePopover();
+        }
+      });
+      $(".droppable").droppable({
+        hoverClass: "drop-target",
+        drop: function(e, ui) {
+          var dest   = $(e.target).data("server");
+          var src    = ui.draggable.parent().data("server");
+          var region = ui.draggable.data("region")
+          var modal  = $("#modal");
+          var yes    = modal.find(".btn-primary");
+          var no     = modal.find(".btn-primary");
+          var title  = modal.find(".modal-title");
+          var body   = modal.find(".modal-body");
+          if (src != dest) {
+            title.html("Move " + region);
+            body.html(
+              $("<ul>").append($("<li>", { text: "from " + src }))
+                       .append($("<li>", { text: "to " + dest })));
+            yes.unbind('click');
+            yes.click(function(e) {
+              $(".draggable").draggable('disable');
+              modal.modal('hide');
+              $("table").fadeTo(100, 0.5);
+              $.ajax({
+                url:    "/move_region",
+                method: "PUT",
+                data: {
+                  src:    src,
+                  dest:   dest,
+                  region: region
+                },
+                success: function(result) {
+                  debug("Succeeded to move ");
+                  $(".draggable").draggable('enable');
+                  refreshApp(menu, opts);
+                },
+                error: function(jqXHR, text, error) {
+                  debug(jqXHR, text, error);
+                  $(".draggable").draggable('enable');
+                  $("table").fadeTo(100, 1.0);
+                  title.html("Failed to move " + region);
+                  body.html($("<pre>", { text: jqXHR.responseText }));
+                  yes.hide();
+                  modal.on('shown.bs.modal', function() {
+                    no.focus();
+                  }).modal();
+                }
+              });
+            }).show();
+            modal.on('shown.bs.modal', function() {
+              yes.focus();
+            }).modal();
+          }
+        }
+      });
     },
     error: function(jqXHR, text, error) {
       debug(jqXHR, text, error);
@@ -78,6 +169,24 @@ var App = React.createClass({
             </div>
           ) : this.props.menu == "rs" ? <RegionByServer {...this.props}/> : <RegionByTable {...this.props}/>}
         </div>
+        <div id="modal" className="modal">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 className="modal-title">Move region</h4>
+              </div>
+              <div className="modal-body">
+                <p id="modal_body">
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" className="btn btn-primary">Move</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -98,12 +207,7 @@ var RegionByServer = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    $(".extra-info").popover({
-      trigger:   "hover",
-      html:      true,
-      placement: "right",
-      container: "body"
-    });
+    enablePopover();
     $("table").fadeTo(100, 1.0);
 
     // Schedule next update
@@ -223,12 +327,13 @@ RegionByServer.Row = React.createClass({
           </a>
         </td>
         <td>
-          <div className="progress">
+          <div className="progress droppable" data-server={this.props.name}>
             {regions.map(function(r) {
               var width = this.props.max == 0 ? 0 :
                 100 * r[metric] / localSum * this.props.sum / this.props.max;
               return width <= 0 ? "" : (
-                <div className="progress-bar extra-info"
+                <div className="progress-bar extra-info draggable"
+                     data-region={r['encoded-name']}
                      key={r['encoded-name']}
                      style={{width: width + '%',
                              color: r.color[1],
@@ -260,12 +365,7 @@ var RegionByTable = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    $(".extra-info").popover({
-      trigger:   "hover",
-      html:      true,
-      placement: "right",
-      container: "body"
-    });
+    enablePopover();
     $("table").fadeTo(100, 1.0);
     // Schedule next update
     refreshTimeout = setTimeout(function() {

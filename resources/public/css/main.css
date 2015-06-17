@@ -57,6 +57,10 @@ div.progress {
   font-family:monospace;
 }
 
+.drop-target {
+  border: 2px solid red;
+}
+
 div.popover{
   /* Max Width of the popover (depending on the container!) */
   max-width: 100%;

@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.hbase.impl
-  (:require [clojure.set :as set])
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.set :as set])
   (:import org.apache.hadoop.hbase.util.Bytes
            java.nio.ByteBuffer))
 
@@ -53,24 +54,38 @@
                (.getRegionsLoad))]       ; byte[] -> RegionLoad
       [(ByteBuffer/wrap region-name) (load->map load)])))
 
+(defn- aggregate-two-sources
+  [cluster-status admin server-name]
+  (let [base-map {:server (.getServerName server-name)}
+        ;; We have two different sources of info
+        from-info (future (online-regions admin server-name))
+        from-load (future (region-loads cluster-status server-name))
+        ;; And we do not want to build maps with partial info
+        common-keys (set/intersection (set (keys @from-info))
+                                      (set (keys @from-load)))]
+    (merge-with
+      (fn [& rs] (apply merge base-map rs))
+      (select-keys @from-info common-keys)
+      (select-keys @from-load common-keys))))
+
 (defn collect-region-info
   "Returns the region information as a list of maps"
   [admin]
   (let [cluster-status (.getClusterStatus admin)
-        aggregate-fn #(let [base-map {:server (.getServerName %)}
-                            ;; We have two different sources of info
-                            from-info (future (online-regions admin %))
-                            from-load (future (region-loads cluster-status %))
-                            ;; And we do not want to build maps with partial info
-                            common-keys (set/intersection (set (keys @from-info))
-                                                          (set (keys @from-load)))]
-                        (merge-with
-                          (fn [& rs] (apply merge base-map rs))
-                          (select-keys @from-info common-keys)
-                          (select-keys @from-load common-keys)))
         server-names (.getServers cluster-status)
-        aggregated (map aggregate-fn server-names)]
+        aggregated (map (partial aggregate-two-sources cluster-status admin)
+                        server-names)]
     (for [server-regions aggregated
           [k v] server-regions]
       (assoc v :name (Bytes/toStringBinary (.array k))))))
 
+(defn region-map
+  "Returns a map that associates encoded region name with the name of the
+  server that holds the regions. Not guaranteed to return all regions."
+  [admin]
+  (let [cluster-status (.getClusterStatus admin)
+        server-names (.getServers cluster-status)
+        all-regions (for [server-name server-names
+                          region-info (.getOnlineRegions admin server-name)]
+                      [(.getEncodedName region-info) (.getServerName server-name)])]
+    (into {} all-regions)))

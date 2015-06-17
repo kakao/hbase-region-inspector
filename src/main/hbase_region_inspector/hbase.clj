@@ -21,4 +21,5 @@
      (try (doall ~@body) (finally (.close admin#)))))
 
 (def collect-region-info hbase-impl/collect-region-info)
+(def region-map hbase-impl/region-map)
 

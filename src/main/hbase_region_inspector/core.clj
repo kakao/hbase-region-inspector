@@ -4,7 +4,7 @@
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-response]]
-            [compojure.core :refer [defroutes GET routes wrap-routes]]
+            [compojure.core :refer [defroutes GET PUT routes wrap-routes]]
             [compojure.route :as route]
             [hiccup.core :as h]
             [selmer.parser :refer [render-file]]
@@ -78,6 +78,15 @@
   (hbase/admin-let
     [admin zk]
     (hbase/collect-region-info admin)))
+
+(defn region-location?
+  "Finds the host region server of the region"
+  [admin encoded-name]
+  (let [all-regions (hbase/collect-region-info admin)]
+    (when-let [the-region
+               (first (filter #(= (:encoded-name %) encoded-name)
+                              all-regions))]
+      (:server the-region))))
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
@@ -204,7 +213,32 @@
          (regions-by-servers (keyword metric) (keyword sort) table)))
   (GET "/table_regions.json" {{metric :metric} :params}
        (response
-         (regions-by-tables (keyword metric)))))
+         (regions-by-tables (keyword metric))))
+  (PUT "/move_region" {{:keys [src dest region]} :params}
+       (hbase/admin-let
+         [admin @zookeeper]
+         (.move admin (.getBytes region) (.getBytes dest))
+         (loop [tries 10
+                message (format "Moving %s from %s to %s" region src dest)]
+           (util/info message)
+           (when (> tries 0)
+             (Thread/sleep 250)
+             (let [loc (region-location? admin region)]
+               (if (nil? loc)
+                 (recur (dec tries) "Region is not online")
+                 (if (not= loc dest)
+                   (recur (dec tries) "Region not yet moved")
+                   (util/info "Region is moved")))))))
+       (update-regions!)
+       (response {})))
+
+(defn wrap-exception [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch Exception e
+        {:status 500
+         :body (.getMessage e)}))))
 
 (def app
   "Combined route of app routes and api routes"
@@ -212,7 +246,8 @@
               (wrap-routes wrap-defaults site-defaults))
           (-> api-routes
               (wrap-routes wrap-defaults api-defaults)
-              wrap-json-response)
+              wrap-json-response
+              wrap-exception)
           (route/not-found "404")))
 
 (defn- bootstrap [zk port bg]

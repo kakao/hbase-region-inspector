@@ -47,7 +47,7 @@
       (finally (.close conn#)))))
 
 ;; Get HRegionInfo from HBaseAdmin
-(defn- online-regions
+(defn- region-locations
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
   [admin]
   (connection-let
@@ -55,24 +55,30 @@
     (let [table-descs (.listTables admin)
           table-names (map #(.getName %) table-descs)
           ;; HTables for all tables
-          htables (map #(cast HTable (.getTable conn %)) table-names)
-          ;; Map of region info => server location
-          locations (reduce #(merge %1 (.getRegionLocations %2)) {} htables)
-          ;; Group by servers
-          locations (reduce #(update-in %1 [(first %2)] conj (last %2))
-                            {}
-                            (for [[region-info server-name] locations]
-                              [(.getServerName server-name) region-info]))
-          ;; Server -> region name -> region info
-          locations (for [[server-name region-infos] locations]
-                      [server-name
-                       (reduce #(apply assoc %1 %2)
-                               {}
-                               (map (fn [region-info]
-                                      [(ByteBuffer/wrap (.getRegionName region-info))
-                                       (info->map region-info)])
-                                    region-infos))])]
-      (into {} locations))))
+          htables (map #(cast HTable (.getTable conn %)) table-names)]
+      ;; Map of region info => server location
+      (reduce #(merge %1 (.getRegionLocations %2)) {} htables))))
+
+;; Get HRegionInfo from HBaseAdmin
+(defn- online-regions
+  "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
+  [admin]
+  (let [locations (region-locations admin)
+        ;; Reverse key-value pairs and group by servers
+        locations (reduce #(update-in %1 [(first %2)] conj (last %2))
+                          {}
+                          (for [[region-info server-name] locations]
+                            [(.getServerName server-name) region-info]))
+        ;; Server -> region name -> region info
+        locations (for [[server-name region-infos] locations]
+                    [server-name
+                     (reduce #(apply assoc %1 %2)
+                             {}
+                             (map (fn [region-info]
+                                    [(ByteBuffer/wrap (.getRegionName region-info))
+                                     (info->map region-info)])
+                                  region-infos))])]
+    (into {} locations)))
 
 
 ;; Get RegionLoad from ClusterStatus
@@ -110,4 +116,14 @@
     (for [server-regions aggregated
           [k v] server-regions]
       (assoc v :name (Bytes/toStringBinary (.array k))))))
+
+(defn region-map
+  "Returns a map that associates encoded region name with the name of the
+  server that holds the regions"
+  [admin]
+  (let [loc-region (region-locations admin)
+        loc-encoded (for [[info server-name] loc-region]
+                      [(.getEncodedName info)
+                       (.getServerName server-name)])]
+    (into {} loc-encoded)))
 
