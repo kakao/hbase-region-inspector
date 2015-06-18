@@ -1,8 +1,27 @@
 var refresh = {
   version: 0,
-  interval: 10000,
+  interval: 10,
+  ticks: 0,
   timeout: null
 };
+
+function schedule(job) {
+  refresh.ticks = 0;
+
+  var tick = function() {
+    if (refresh.ticks == refresh.interval) {
+      job();
+    } else {
+      var sec = refresh.interval - refresh.ticks;
+      if (sec > 0) {
+        $("#refresh_msg").text("Refresh in " + sec + " second" + (sec > 1 ? "s" : ""));
+      }
+      refresh.ticks++;
+      refresh.timeout = setTimeout(tick, 1000);
+    }
+  }
+  tick();
+}
 
 function debug() {
   console.log.apply(console, arguments);
@@ -226,10 +245,10 @@ var RegionByServer = React.createClass({
     $("table").fadeTo(100, 1.0);
 
     // Schedule next update
-    refresh.timeout = setTimeout(function() {
+    schedule(function() {
       debug("refresh server-regions");
       this.refresh({}, true);
-    }.bind(this), refresh.interval);
+    }.bind(this));
   },
   setMetric: function(val) {
     this.refresh({ metric: val });
@@ -356,6 +375,10 @@ var MetricsTab = React.createClass({
                   </li>
                 );
             }, this)}
+            <li className="pull-right disabled">
+              <a id="refresh_msg" href="javascript:void(0)">
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -425,10 +448,10 @@ var RegionByTable = React.createClass({
     enablePopover();
     $("table").fadeTo(100, 1.0);
     // Schedule next update
-    refresh.timeout = setTimeout(function() {
+    schedule(function() {
       debug("refresh table-regions");
       refreshApp("tb", { metric: this.props.metric });
-    }.bind(this), refresh.interval);
+    }.bind(this));
   },
   setMetric: function(val) {
     $("table").fadeTo(100, 0.5);
