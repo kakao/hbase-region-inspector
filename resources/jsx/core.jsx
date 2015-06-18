@@ -1,5 +1,8 @@
-var refreshInterval = 10000;
-var refreshTimeout = null;
+var refresh = {
+  version: 0,
+  interval: 10000,
+  timeout: null
+};
 
 function debug() {
   console.log.apply(console, arguments);
@@ -20,14 +23,20 @@ function enablePopover() {
 }
 
 function refreshApp(menu, opts) {
-  clearTimeout(refreshTimeout);
+  clearTimeout(refresh.timeout);
 
   var url = menu == "rs" ? "/server_regions.json" : "/table_regions.json"
+  var currentVersion = refresh.version;
   debug(opts)
   $.ajax({
     url: url,
     data: opts,
     success: function(result) {
+      if (refresh.version != currentVersion) {
+        debug("already updated: " + currentVersion + "/" + refresh.version);
+        return;
+      }
+      refresh.version++;
       React.render(<App {...opts} menu={menu} result={result}/>, document.body);
       $(".draggable").draggable({
         helper: 'clone',
@@ -217,10 +226,10 @@ var RegionByServer = React.createClass({
     $("table").fadeTo(100, 1.0);
 
     // Schedule next update
-    refreshTimeout = setTimeout(function() {
+    refresh.timeout = setTimeout(function() {
       debug("refresh server-regions");
       this.refresh({}, true);
-    }.bind(this), refreshInterval);
+    }.bind(this), refresh.interval);
   },
   setMetric: function(val) {
     this.refresh({ metric: val });
@@ -416,10 +425,10 @@ var RegionByTable = React.createClass({
     enablePopover();
     $("table").fadeTo(100, 1.0);
     // Schedule next update
-    refreshTimeout = setTimeout(function() {
+    refresh.timeout = setTimeout(function() {
       debug("refresh table-regions");
       refreshApp("tb", { metric: this.props.metric });
-    }.bind(this), refreshInterval);
+    }.bind(this), refresh.interval);
   },
   setMetric: function(val) {
     $("table").fadeTo(100, 0.5);
