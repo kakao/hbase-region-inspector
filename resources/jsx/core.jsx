@@ -219,33 +219,30 @@ var RegionByServer = React.createClass({
     // Schedule next update
     refreshTimeout = setTimeout(function() {
       debug("refresh server-regions");
-      this.refresh({});
+      this.refresh({}, true);
     }.bind(this), refreshInterval);
   },
   setMetric: function(val) {
-    $("table").fadeTo(100, 0.5);
     this.refresh({ metric: val });
   },
   setSort: function(val) {
-    $("table").fadeTo(100, 0.5);
     this.refresh({ sort: val });
   },
   setLayout: function(val) {
     this.setState({condensed: val});
   },
   setTable: function(val) {
-    $("table").fadeTo(100, 0.5);
     this.refresh({ tables: [val] });
   },
   toggleTable: function(val, visible) {
-    $("table").fadeTo(100, 0.5);
     var tables = _.without(this.props.tables, val)
     if (visible) {
       tables.push(val)
     }
     this.refresh({ tables: tables });
   },
-  refresh: function(opts) {
+  refresh: function(opts, nofade) {
+    if (!nofade) $("table").fadeTo(100, 0.5);
     refreshApp("rs", _.extend(_.omit(this.props, "result"), opts))
   },
   render: function() {
