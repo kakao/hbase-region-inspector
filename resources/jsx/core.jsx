@@ -23,6 +23,10 @@ function schedule(job) {
   tick();
 }
 
+function fmt(val) {
+  return val > 10 ? val : val.toFixed(2);
+}
+
 function debug() {
   console.log.apply(console, arguments);
 }
@@ -344,6 +348,10 @@ var RegionByServer = React.createClass({
           <div className="alert alert-warning" role="alert">No servers found</div>
         }
         <table className="table table-condensed barchart">
+          <thead>
+            <td></td>
+            <td className="pull-right text-muted">{servers.length > 0 ? fmt(servers[0].max) : ""}</td>
+          </thead>
           <tbody>
           {servers.map(function(server) {
             return <RegionByServer.Row key={server.name} metric={this.props.metric} {...this.state} parent={this} callback={this.setTable} {...server} />
@@ -525,7 +533,7 @@ RegionByTable.Row = React.createClass({
                            style={{width: width + '%',
                                    color: r.color[1],
                                    backgroundColor: r.color[0]}}>
-                        {(!condensed && width > 2) ? (val > 10 ? val : val.toFixed(2)) : ""}
+                        {(!condensed && width > 2) ? fmt(val) : ""}
                       </div>
                     </div>
                   </td>
