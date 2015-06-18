@@ -91,3 +91,7 @@ tr.condensed * {
   margin-bottom: 5px !important;
   cursor: pointer;
 }
+
+button.btn-xs {
+  font-size: 10px;
+}

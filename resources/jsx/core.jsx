@@ -241,6 +241,9 @@ var RegionByServer = React.createClass({
     }
     this.refresh({ tables: tables });
   },
+  clearTable: function() {
+    this.refresh({ tables: [] });
+  },
   refresh: function(opts, nofade) {
     if (!nofade) $("table").fadeTo(100, 0.5);
     refreshApp("rs", _.extend(_.omit(this.props, "result"), opts))
@@ -301,6 +304,9 @@ var RegionByServer = React.createClass({
                           className="label label-info label-table">{name}</span>
                   )
                 }, this)}
+                <button type="button" className={"btn btn-default btn-xs" + (this.props.tables.length == 0 ? " hide" : "")} onClick={this.clearTable}>
+                  <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                </button>
               </h5>
             </div>
           </div>
