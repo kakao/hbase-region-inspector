@@ -16,5 +16,6 @@ resources/public/js/.module-cache
 resources/public/css/bootstrap.css
 resources/public/fonts
 resources/public/images
+releases
 vendor.js
 doc
