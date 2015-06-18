@@ -90,29 +90,29 @@
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
-  [metric sort table]
-  (let [all-regions (filter (complement :meta?) (:regions @cached))
-        ;; Filter regions by table name
-        filtered-regions (filter #(or (empty? table) (= (:table %) table)) all-regions)
-        filtered (seq filtered-regions)
-        filter-error (boolean (and (seq table) (not filtered)))
-        all-regions (if filtered filtered-regions all-regions)
+  [metric sort tables]
+  (let [all-regions (remove :meta? (:regions @cached))
 
-        ;; Find the list of tables for all regions
-        all-tables (group-by :table all-regions)
         ;; Sort the tables in descending order by the sum of the given metric
-        all-tables (keys (reverse (sort-by
-                                    #(reduce + (map metric (last %)))
-                                    all-tables)))
+        all-tables (keys (sort-by
+                           #(reduce - (map metric (last %)))
+                           (group-by :table all-regions)))
+
+        ;; Tables to show
+        visible-tables (set (if (seq tables) tables all-tables))
+
+        ;; Filter regions by table name
+        visible-regions (filter #(visible-tables (:table %)) all-regions)
+
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
                      (sort-by first util/compare-server-names
-                              (group-by :server all-regions)))
+                              (group-by :server visible-regions)))
         ;; Function to sort the regions in the descending order
         sort-fn (if (= sort :metric)
                   (fn [regions] (reverse (sort-by metric regions)))
-                  (fn [regions] (sort-by #(identity [(.indexOf all-tables (:table %))
-                                                     (- (metric %))]) regions)))
+                  (fn [regions] (sort-by #(vector (.indexOf all-tables (:table %))
+                                                  (- (metric %))) regions)))
         ;; Sort the regions in each server
         grouped (map #(update-in % [:regions] sort-fn) grouped)
         ;; Find the local sum of the metric of each region
@@ -124,7 +124,7 @@
                     nil)]
     ;; Build the result list
     {:servers (map #(assoc % :max group-max) grouped)
-     :error filter-error}))
+     :tables (map #(apply vector % (color-for-table %)) all-tables)}))
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
@@ -207,10 +207,13 @@
 (defroutes api-routes
   (GET "/regions.json" _ (response @cached))
   (GET "/server_regions.json"
-       {{:keys [sort table metric]
-         :or {sort "metric" table "" metric "store-file-size-mb"}} :params}
-       (response
-         (regions-by-servers (keyword metric) (keyword sort) table)))
+       {{:keys [sort metric]
+         :or {sort "metric" metric "store-file-size-mb"}
+         :as params} :params}
+       (let [tables (get params "tables[]" [])
+             tables (if (instance? String tables) [tables] tables)]
+         (response
+           (regions-by-servers (keyword metric) (keyword sort) tables))))
   (GET "/table_regions.json" {{metric :metric} :params}
        (response
          (regions-by-tables (keyword metric))))

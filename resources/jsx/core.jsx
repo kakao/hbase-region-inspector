@@ -2,7 +2,7 @@ var refreshInterval = 10000;
 var refreshTimeout = null;
 
 function debug() {
-  // console.log.apply(console, arguments);
+  console.log.apply(console, arguments);
 }
 
 function disablePopover() {
@@ -126,6 +126,7 @@ var App = React.createClass({
     refreshApp(this.props.menu, {});
   },
   changeMenu: function(menu) {
+    // TODO state = condensed
     refreshApp(menu, {});
   },
   render: function() {
@@ -147,7 +148,7 @@ var App = React.createClass({
                 <li className={this.props.menu == "rs" ? "active" : ""}>
                   <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>Region servers</a>
                 </li>
-                <li className={this.props.menu == "table" ? "active" : ""}>
+                <li className={this.props.menu == "tb" ? "active" : ""}>
                   <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tb")}>Tables</a>
                 </li>
               </ul>
@@ -195,10 +196,15 @@ var App = React.createClass({
 var RegionByServer = React.createClass({
   getDefaultProps: function() {
     return {
-      table:  "",
+      tables: [],
       sort:   "metric",
       metric: "store-file-size-mb",
       result: null
+    }
+  },
+  getInitialState: function() {
+    return {
+      condensed: false
     }
   },
   componentDidUpdate: function(prevProps, prevState) {
@@ -224,18 +230,20 @@ var RegionByServer = React.createClass({
     $("table").fadeTo(100, 0.5);
     this.refresh({ sort: val });
   },
-  setTable: function(val) {
-    $("#rs_table_name").val(val);
-    $("table").fadeTo(100, 0.5);
-    this.refresh({ table: val });
+  setLayout: function(val) {
+    this.setState({condensed: val});
   },
-  setTableDelayed: function(e) {
-    var table = e.target.value;
-    clearTimeout(refreshTimeout);
-    refreshTimeout = setTimeout(function() {
-      $("table").fadeTo(100, 0.5);
-      this.refresh({ table: table });
-    }.bind(this), 750)
+  setTable: function(val) {
+    $("table").fadeTo(100, 0.5);
+    this.refresh({ tables: [val] });
+  },
+  toggleTable: function(val, visible) {
+    $("table").fadeTo(100, 0.5);
+    var tables = _.without(this.props.tables, val)
+    if (visible) {
+      tables.push(val)
+    }
+    this.refresh({ tables: tables });
   },
   refresh: function(opts) {
     refreshApp("rs", _.extend(_.omit(this.props, "result"), opts))
@@ -251,23 +259,55 @@ var RegionByServer = React.createClass({
     debug(this.props);
     var servers = this.props.result.servers;
     var error = this.props.result.error;
+    var tables = this.props.result.tables;
     return (
       <div>
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
-        <div className="row bottom-buffer">
-          <div className="col-md-5">
-            <div className={"input-group input-group-sm " + (error ? "has-error" : "")} role="group">
-              <input id="rs_table_name" type="text" className="form-control" placeholder="Table name" onChange={this.setTableDelayed}/>
-              <span className="input-group-btn">
-                <button type="button" className="btn btn-default" onClick={this.setTable.bind(this, "")}>
-                  <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                </button>
-                <button type="button" className={"btn btn-" + (this.props.sort == "metric" ? "primary" : "default")} onClick={this.setSort.bind(this, "metric")}>Sort by metric</button>
-                <button type="button" className={"btn btn-" + (this.props.sort == "table" ? "primary" : "default")} onClick={this.setSort.bind(this, "table")}>Sort by table</button>
-              </span>
+        <form className="form-horizontal">
+          <div className="form-group">
+            <label className="control-label col-xs-1">Sort</label>
+            <div className="col-xs-11">
+              <label className="radio-inline">
+                <input type="radio" name="sortOptions" value="metric" defaultChecked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}>Region</input>
+              </label>
+              <label className="radio-inline">
+                <input type="radio" name="sortOptions" value="table" defaultChecked={this.props.sort == "table"} onChange={this.setSort.bind(this, "table")}>Table</input>
+              </label>
             </div>
           </div>
-        </div>
+
+          <div className="form-group">
+            <label className="control-label col-xs-1">Layout</label>
+            <div className="col-xs-11">
+              <label className="radio-inline">
+                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
+              </label>
+              <label className="radio-inline">
+                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}>Condensed</input>
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="control-label col-xs-1">Tables</label>
+            <div className="col-xs-11">
+              <h5>
+                {tables.map(function(t) {
+                  var name = t[0];
+                  var allVisible = this.props.tables.length == 0;
+                  var visible = (allVisible || this.props.tables.indexOf(name) >= 0);
+                  var bg = visible ? t[1] : "silver";
+                  return (
+                    <span key={name}
+                          style={{backgroundColor: bg}}
+                          onClick={this.toggleTable.bind(this, name, allVisible ? true : !visible)}
+                          className="label label-info label-table">{name}</span>
+                  )
+                }, this)}
+              </h5>
+            </div>
+          </div>
+        </form>
 
         {servers.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No servers found</div>
@@ -275,7 +315,7 @@ var RegionByServer = React.createClass({
         <table className="table table-condensed barchart">
           <tbody>
           {servers.map(function(server) {
-            return <RegionByServer.Row key={server.name} metric={this.props.metric} parent={this} callback={this.setTable} {...server} />
+            return <RegionByServer.Row key={server.name} metric={this.props.metric} {...this.state} parent={this} callback={this.setTable} {...server} />
           }, this)}
           </tbody>
         </table>
@@ -318,12 +358,13 @@ RegionByServer.Row = React.createClass({
     var shortName = this.props.name.replace(/\..*/, '');
     var url = "http://" + this.props.name.replace(/,.*/, '') + ":60030";
     var localSum = this.props.sum;
+    var condensed = this.props.condensed ? " condensed" : ""
 
     return (
-      <tr>
-        <td className="text-muted col-xs-2">
+      <tr className={condensed}>
+        <td className="text-muted col-xs-1">
           <a target="_blank" href={url}>
-            {shortName}
+            <div className="mono-space">{shortName}</div>
           </a>
         </td>
         <td>
@@ -341,7 +382,7 @@ RegionByServer.Row = React.createClass({
                              borderRight: '1px solid ' + r.color[1]}}
                      data-content={r.html}
                      onClick={this.props.callback.bind(this.props.parent, r.table)}>
-                  {width > 2 ? r.table[0] : ''}
+                  {(!condensed && width > 2) ? r.table[0] : ''}
                 </div>
               )
             }, this)}
@@ -352,8 +393,12 @@ RegionByServer.Row = React.createClass({
   }
 });
 
-
 var RegionByTable = React.createClass({
+  getInitialState: function() {
+    return {
+      condensed: false
+    }
+  },
   getDefaultProps: function() {
     return {
       metric: "store-file-size-mb",
@@ -377,6 +422,9 @@ var RegionByTable = React.createClass({
     $("table").fadeTo(100, 0.5);
     refreshApp("tb", { metric: val });
   },
+  setLayout: function(val) {
+    this.setState({condensed: val});
+  },
   render: function() {
     if (this.props.result == null) {
       return (
@@ -388,12 +436,25 @@ var RegionByTable = React.createClass({
     return (
       <div>
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
+        <form className="form-horizontal">
+          <div className="form-group">
+            <label className="control-label col-xs-1">Layout</label>
+            <div className="col-xs-11">
+              <label className="radio-inline">
+                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
+              </label>
+              <label className="radio-inline">
+                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}>Condensed</input>
+              </label>
+            </div>
+          </div>
+        </form>
         {this.props.result.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No tables found</div>
         }
         {this.props.result.map(function(table) {
           return <RegionByTable.Row key={table.name} sum={table.sum} metric={this.props.metric}
-                                    name={table.name} regions={table.regions}/>
+                                    condensed={this.state.condensed} name={table.name} regions={table.regions}/>
         }, this)}
       </div>
     )
@@ -406,6 +467,7 @@ RegionByTable.Row = React.createClass({
     var max = this.props.regions.reduce(function(prev, curr) {
       return curr[metric] > prev ? curr[metric] : prev
     }, 0);
+    var condensed = this.props.condensed ? " condensed" : ""
     return (
       <div className="row">
         <div className="col-xs-12">
@@ -415,12 +477,12 @@ RegionByTable.Row = React.createClass({
             {this.props.regions.map(function(r) {
               var width = max == 0 ? 0 : 100 * r[this.props.metric] / max;
               var val = r[this.props.metric];
-              return width <= 0 ? "" : (
-                <tr key={r['encoded-name']}>
-                  <td className="text-muted mono-space col-xs-3">
-                    <span data-content={r.html} className="extra-info">
+              return (
+                <tr key={r['encoded-name']} className={condensed}>
+                  <td className="text-muted col-xs-1">
+                    <div data-content={r.html} className="mono-space extra-info">
                       {r['encoded-name']}
-                    </span>
+                    </div>
                   </td>
                   <td>
                     <div className="progress">
@@ -428,7 +490,7 @@ RegionByTable.Row = React.createClass({
                            style={{width: width + '%',
                                    color: r.color[1],
                                    backgroundColor: r.color[0]}}>
-                        {val > 10 ? val : val.toFixed(2)}
+                        {(!condensed && width > 2) ? (val > 10 ? val : val.toFixed(2)) : ""}
                       </div>
                     </div>
                   </td>

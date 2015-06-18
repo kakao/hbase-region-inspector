@@ -32,6 +32,12 @@ form {
 
 div.progress {
   margin-bottom: 0px;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+div.progress-bar {
+  box-shadow: none;
 }
 
 .extra-info {
@@ -54,7 +60,8 @@ div.progress {
 }
 
 .mono-space {
-  font-family:monospace;
+  font-family: monospace;
+  margin-right: 10px;
 }
 
 .drop-target {
@@ -64,4 +71,23 @@ div.progress {
 div.popover{
   /* Max Width of the popover (depending on the container!) */
   max-width: 100%;
+}
+
+.form-horizontal {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 5px;
+}
+
+tr.condensed * {
+  height: 8px;
+  font-size: 8px;
+}
+
+.label-table {
+  display: inline-block !important;
+  margin-bottom: 5px !important;
+  cursor: pointer;
 }
