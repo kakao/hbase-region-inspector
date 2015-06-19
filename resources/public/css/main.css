@@ -95,3 +95,7 @@ tr.condensed * {
 button.btn-xs {
   font-size: 10px;
 }
+
+td.nowrap {
+  white-space: nowrap;
+}

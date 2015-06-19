@@ -405,7 +405,7 @@ RegionByServer.Row = React.createClass({
 
     return (
       <tr className={condensed}>
-        <td className="text-muted col-xs-1">
+        <td className="text-muted col-xs-1 nowrap">
           <a target="_blank" href={url}>
             <div className="mono-space">{shortName}</div>
           </a>
