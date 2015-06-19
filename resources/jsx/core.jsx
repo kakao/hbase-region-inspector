@@ -2,6 +2,13 @@ var refresh = {
   version: 0,
   interval: 10,
   ticks: 0,
+  paused: false,
+  pause: function() {
+    this.paused = true;
+  },
+  resume: function() {
+    this.paused = false;
+  },
   timeout: null
 };
 
@@ -16,7 +23,9 @@ function schedule(job) {
       if (sec > 0) {
         $("#refresh_msg").text("Refresh in " + sec + " second" + (sec > 1 ? "s" : ""));
       }
-      refresh.ticks++;
+      if (!refresh.paused) {
+        refresh.ticks++;
+      }
       refresh.timeout = setTimeout(tick, 1000);
     }
   }
@@ -66,6 +75,8 @@ function refreshApp(menu, opts) {
         revert: 'invalid',
         revertDuration: 200,
         start: function(e, ui) {
+          refresh.pause();
+
           var orig = $(e.target);
           disablePopover();
           ui.helper.width(orig.width()).height(orig.height()).css({
@@ -81,61 +92,82 @@ function refreshApp(menu, opts) {
           orig.hide();
         },
         stop: function(e, ui) {
+          debug("Drag stopped");
           $(e.target).show();
           enablePopover();
+        },
+        revert: function(valid) {
+          if (!valid) {
+            refresh.resume();
+          }
         }
       });
       $(".droppable").droppable({
         hoverClass: "drop-target",
         drop: function(e, ui) {
-          var dest   = $(e.target).data("server");
           var src    = ui.draggable.parent().data("server");
+          var dest   = $(e.target).data("server");
+
+          debug("Dropped ", src, dest);
+          if (src == dest) {
+            return
+          }
+
           var region = ui.draggable.data("region")
           var modal  = $("#modal");
           var yes    = modal.find(".btn-primary");
-          var no     = modal.find(".btn-primary");
+          var no     = modal.find(".btn-default");
           var title  = modal.find(".modal-title");
           var body   = modal.find(".modal-body");
-          if (src != dest) {
-            title.html("Move " + region);
-            body.html(
-              $("<ul>").append($("<li>", { text: "from " + src }))
-                       .append($("<li>", { text: "to " + dest })));
-            yes.unbind('click');
-            yes.click(function(e) {
-              $(".draggable").draggable('disable');
-              modal.modal('hide');
-              $("table").fadeTo(100, 0.5);
-              $.ajax({
-                url:    "/move_region",
-                method: "PUT",
-                data: {
-                  src:    src,
-                  dest:   dest,
-                  region: region
-                },
-                success: function(result) {
-                  debug("Succeeded to move ");
-                  $(".draggable").draggable('enable');
-                  refreshApp(menu, opts);
-                },
-                error: function(jqXHR, text, error) {
-                  debug(jqXHR, text, error);
-                  $(".draggable").draggable('enable');
-                  $("table").fadeTo(100, 1.0);
-                  title.html("Failed to move " + region);
-                  body.html($("<pre>", { text: jqXHR.responseText }));
-                  yes.hide();
-                  modal.on('shown.bs.modal', function() {
-                    no.focus();
-                  }).modal();
-                }
-              });
-            }).show();
-            modal.on('shown.bs.modal', function() {
-              yes.focus();
-            }).modal();
-          }
+
+          title.html("Move " + region);
+          body.html(
+            $("<ul>").append($("<li>", { text: "from " + src }))
+                     .append($("<li>", { text: "to " + dest })));
+          yes.unbind('click');
+          yes.click(function(e) {
+            $(".draggable").draggable('disable');
+            modal.modal('hide');
+            $("table").fadeTo(100, 0.5);
+
+            var resume = function() {
+              $(".draggable").draggable('enable');
+              refresh.resume();
+            }
+
+            $.ajax({
+              url:    "/move_region",
+              method: "PUT",
+              data: {
+                src:    src,
+                dest:   dest,
+                region: region
+              },
+              success: function(result) {
+                debug("Succeeded to move " + region);
+                resume();
+                refreshApp(menu, opts);
+              },
+              error: function(jqXHR, text, error) {
+                debug(jqXHR, text, error);
+                resume();
+                $("table").fadeTo(100, 1.0);
+                title.html("Failed to move " + region);
+                body.html($("<pre>", { text: jqXHR.responseText }));
+                yes.hide();
+                modal.on('shown.bs.modal', function() {
+                  no.focus();
+                }).modal();
+              }
+            });
+          }).show();
+          no.unbind('click');
+          no.click(function(e) {
+            refresh.resume();
+          });
+          modal.on('shown.bs.modal', function() {
+            yes.focus();
+          }).modal();
         }
       });
     },
@@ -159,6 +191,7 @@ var App = React.createClass({
   },
   changeMenu: function(menu) {
     // TODO state = condensed
+    refresh.version++;
     refreshApp(menu, {});
   },
   render: function() {
