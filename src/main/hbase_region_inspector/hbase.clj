@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.hbase
-  (:require [hbase-region-inspector.hbase.impl :as hbase-impl])
+  (:require [clojure.string :as str]
+            [hbase-region-inspector.hbase.impl :as hbase-impl])
   (:import org.apache.hadoop.hbase.client.HBaseAdmin
            org.apache.hadoop.hbase.HBaseConfiguration
            org.apache.hadoop.hbase.util.Bytes
@@ -7,12 +8,15 @@
 
 ;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
 (defn- connect-admin [zk]
-  (HBaseAdmin.
-    (doto (HBaseConfiguration/create)
-      (.set "hbase.zookeeper.quorum" zk)
-      (.setInt "hbase.client.retries.number" 2)
-      (.setInt "hbase.regions.slop" 0)
-      (.setInt "zookeeper.recovery.retry" 2))))
+  (let [[quorum port] (str/split zk #"/")
+        port (or port 2181)]
+    (HBaseAdmin.
+      (doto (HBaseConfiguration/create)
+        (.set "hbase.zookeeper.quorum" quorum)
+        (.setInt "hbase.zookeeper.property.clientPort" port)
+        (.setInt "hbase.client.retries.number" 2)
+        (.setInt "hbase.regions.slop" 0)
+        (.setInt "zookeeper.recovery.retry" 2)))))
 
 (defmacro admin-let
   [[name zk] & body]

@@ -256,7 +256,7 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: java -jar hbase-region-inspector.jar QUORUM PORT")
+  (println "usage: hbase-region-inspector QUORUM[/ZKPORT] PORT")
   (System/exit 1))
 
 (defn -main [& args]

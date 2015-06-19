@@ -2,8 +2,8 @@
 
 ## Usage
 
-```sh
-./hbase-region-inspector ZOOKEEPER_QUORUM PORT
+```
+usage: hbase-region-inspector QUORUM[/ZKPORT] PORT
 ```
 
 ## Development
