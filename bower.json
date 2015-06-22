@@ -13,7 +13,7 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "~3.3.4",
+    "bootstrap": "3.3.4",
     "react": "~0.13.3",
     "underscore": "~1.8.3",
     "d3": "~3.5.5",
