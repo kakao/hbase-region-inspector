@@ -12,6 +12,18 @@ var refresh = {
   timeout: null
 };
 
+var colors = {};
+
+function colorFor(table) {
+  if (!colors[table]) {
+    var h = Math.floor(Math.random() * 360)
+      , s = 30 + Math.floor(Math.random() * 30)
+      , l = 60 + Math.floor(Math.random() * 20);
+    return colors[table] = [$.husl.toHex(h, s, l), $.husl.toHex(h, s, l - 10)];
+  }
+  return colors[table];
+}
+
 function schedule(job) {
   refresh.ticks = 0;
 
@@ -357,11 +369,10 @@ var RegionByServer = React.createClass({
             <label className="control-label col-xs-1">Tables</label>
             <div className="col-xs-11">
               <h5>
-                {tables.map(function(t) {
-                  var name = t[0];
+                {tables.map(function(name) {
                   var allVisible = this.props.tables.length == 0;
                   var visible = (allVisible || this.props.tables.indexOf(name) >= 0);
-                  var bg = visible ? t[1] : "silver";
+                  var bg = visible ? colorFor(name)[0] : "silver";
                   return (
                     <span key={name}
                           style={{backgroundColor: bg}}
@@ -453,9 +464,9 @@ RegionByServer.Row = React.createClass({
                      data-region={r['encoded-name']}
                      key={r['encoded-name']}
                      style={{width: width + '%',
-                             color: r.color[1],
-                             backgroundColor: r.color[0],
-                             borderRight: '1px solid ' + r.color[1]}}
+                             color: colorFor(r.table)[1],
+                             backgroundColor: colorFor(r.table)[0],
+                             borderRight: '1px solid ' + colorFor(r.table)[1]}}
                      data-content={r.html}
                      onClick={this.props.callback.bind(this.props.parent, r.table)}>
                   {(!condensed && width > 2) ? r.table[0] : ''}
@@ -564,8 +575,8 @@ RegionByTable.Row = React.createClass({
                     <div className="progress">
                       <div className="progress-bar"
                            style={{width: width + '%',
-                                   color: r.color[1],
-                                   backgroundColor: r.color[0]}}>
+                                   color: colorFor(r.table)[1],
+                                   backgroundColor: colorFor(r.table)[0]}}>
                         {(!condensed && width > 2) ? fmt(val) : ""}
                       </div>
                     </div>

@@ -21,14 +21,6 @@
 ;;; Inspection interval
 (def update-interval 10000)
 
-(let [palette (atom {})]
-  (defn color-for-table [table]
-    "Function to assign colors for tables"
-    (or (@palette table)
-        (let [new-color (util/color-pair)]
-          (swap! palette assoc table new-color)
-          new-color))))
-
 (defn format-val
   "String formatter for region properties"
   [type val]
@@ -124,7 +116,7 @@
                     nil)]
     ;; Build the result list
     {:servers (map #(assoc % :max group-max) grouped)
-     :tables (map #(apply vector % (color-for-table %)) all-tables)}))
+     :tables all-tables}))
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
@@ -172,13 +164,8 @@
                             :requests-rate (diff-fn % :requests)
                             :write-requests-rate (diff-fn % :write-requests)
                             :read-requests-rate (diff-fn % :read-requests)
-                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
-                         new-regions)
-        ;; Build HTML for popover and assign color
-        new-regions (map #(assoc %
-                                 :html (build-html %)
-                                 :color (color-for-table (:table %)))
-                         new-regions)]
+                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %)
+                            :html (build-html %)) new-regions)]
     (reset! cached {:updated-at now
                     :regions new-regions})))
 
