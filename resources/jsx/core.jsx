@@ -33,7 +33,7 @@ function schedule(job) {
 }
 
 function fmt(val) {
-  return val > 10 ? val : val.toFixed(2);
+  return val > 10 ? Math.floor(val) : val.toFixed(2);
 }
 
 function debug() {
