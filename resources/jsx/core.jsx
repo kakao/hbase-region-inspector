@@ -56,11 +56,11 @@ function disablePopover() {
   $(".extra-info").popover('disable')
 }
 
-function enablePopover() {
+function enablePopover(pos) {
   $(".extra-info").popover({
     trigger:   "hover",
     html:      true,
-    placement: "right",
+    placement: pos,
     container: "body"
   });
   $(".extra-info").popover('enable')
@@ -106,7 +106,7 @@ function refreshApp(menu, opts) {
         stop: function(e, ui) {
           debug("Drag stopped");
           $(e.target).show();
-          enablePopover();
+          enablePopover(menu == "rs" ? "top" : "right");
         },
         revert: function(valid) {
           if (!valid) {
@@ -290,7 +290,7 @@ var RegionByServer = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    enablePopover();
+    enablePopover("top");
     $("table").fadeTo(100, 1.0);
 
     // Schedule next update
@@ -497,7 +497,7 @@ var RegionByTable = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    enablePopover();
+    enablePopover("right");
     $("table").fadeTo(100, 1.0);
     // Schedule next update
     schedule(function() {
