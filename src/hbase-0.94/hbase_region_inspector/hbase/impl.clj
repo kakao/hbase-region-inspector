@@ -12,8 +12,8 @@
   [info]
   {:encoded-name (.getEncodedName info)
    :table        (Bytes/toString (.getTableName info))
-   :start-key    (Bytes/toStringBinary (.getStartKey info))
-   :end-key      (Bytes/toStringBinary (.getEndKey info))
+   :start-key    (.getStartKey info)
+   :end-key      (.getEndKey info)
    :meta?        (.isMetaRegion info)})
 
 (defn load->map

@@ -28,8 +28,8 @@
         kb #(format "%d KB" (long %))
         rate #(format "%.2f" (double %))]
     (case type
-      :start-key                  ["Start key" val]
-      :end-key                    ["End key" val]
+      :start-key                  ["Start key" (hbase/byte-buffer->str val)]
+      :end-key                    ["End key" (hbase/byte-buffer->str val)]
       :store-file-size-mb         ["Compressed" (mb val)]
       :store-uncompressed-size-mb ["Uncompressed" (mb val)]
       :store-file-index-size-mb   ["Index" (mb val)]
@@ -80,6 +80,12 @@
                               all-regions))]
       (:server the-region))))
 
+(defn- byte-buffers->str [region]
+  (reduce (fn [region key]
+            (assoc region key (hbase/byte-buffer->str (key region))))
+          region
+          [:start-key :end-key]))
+
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
   [metric sort tables]
@@ -94,7 +100,8 @@
         visible-tables (set (if (seq tables) tables all-tables))
 
         ;; Filter regions by table name
-        visible-regions (filter #(visible-tables (:table %)) all-regions)
+        visible-regions (map byte-buffers->str
+                             (filter #(visible-tables (:table %)) all-regions))
 
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
@@ -124,8 +131,12 @@
   (let [metric (or metric :store-file-size-mb)
         ;; Exclude hbase:meta table
         all-regions (filter (complement :meta?) (:regions @cached))
+        ;; Sort the regions
+        sorted-regions (sort-by :start-key hbase/bytes-comp all-regions)
+        ;; ByteBuffer -> strings
+        visible-regions (map byte-buffers->str sorted-regions)
         ;; Group regions by table name
-        grouped (group-by :table all-regions)
+        grouped (group-by :table visible-regions)
         ;; Calculate the sum for each group
         grouped-sum (into {}
                           (for [[table regions] grouped]
@@ -134,12 +145,8 @@
         list-with-sum (map #(assoc (zipmap [:name :regions] %)
                                    :sum (last (format-val metric (grouped-sum (first %)))))
                            grouped)
-        ;; Sort regions in each partition by start key
-        locally-sorted (map #(update-in % [:regions]
-                                        (fn [regions] (sort-by :start-key regions)))
-                            list-with-sum)
         ;; Sort the list by table name
-        sorted (sort-by :name locally-sorted)]
+        sorted (sort-by :name list-with-sum)]
     sorted))
 
 (defn update-regions!
