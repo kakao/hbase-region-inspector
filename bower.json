@@ -19,7 +19,8 @@
     "d3": "~3.5.5",
     "jquery": "~2.1.4",
     "jquery-ui": "~1.11.4",
-    "husl": "~5.0.3"
+    "husl": "~5.0.3",
+    "spin.js": "~2.3.1"
   },
   "install": {
     "path": "resources/public/vendor"

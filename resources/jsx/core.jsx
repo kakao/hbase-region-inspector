@@ -197,9 +197,20 @@ var App = React.createClass({
       menu: "rs"
     }
   },
+  spinner: null,
   componentDidMount: function() {
     debug("app-mounted");
+    if (this.spinner == null) {
+      var target = document.getElementById("spinner");
+      this.spinner = new Spinner({color:'#999', lines: 12}).spin(target);
+    }
     refreshApp(this.props.menu, {});
+  },
+  componentDidUpdate: function(prevProps, prevState) {
+    debug("app-updated");
+    if (this.spinner != null) {
+      this.spinner.stop();
+    }
   },
   changeMenu: function(menu) {
     // TODO state = condensed
@@ -327,11 +338,7 @@ var RegionByServer = React.createClass({
   },
   render: function() {
     if (this.props.result == null) {
-      return (
-        <p className="text-left">
-          <img src="images/spinner.gif" width="100"/>
-        </p>
-      );
+      return <div id="spinner"/>;
     }
     debug(this.props);
     var servers = this.props.result.servers;
@@ -514,11 +521,7 @@ var RegionByTable = React.createClass({
   },
   render: function() {
     if (this.props.result == null) {
-      return (
-        <p className="text-left">
-          <img src="images/spinner.gif" width="100"/>
-        </p>
-      );
+      return <div id="spinner"/>;
     }
     return (
       <div>
