@@ -1,12 +1,11 @@
 (def project-version "0.1.0")
-(def bins
-  (into {}
-        (for [profile [:0.94 :0.98]]
-          [profile
-           (str "hbase-region-inspector-" (name profile) "-" project-version)])))
+(def profiles [:0.94 :0.98])
+(def bins (into {} (for [profile profiles]
+                     [profile (format "hbase-region-inspector-%s-%s"
+                                      (name profile) project-version)])))
 (def jars (into {} (for [[k v] bins] [k (str v ".jar")])))
 
-(defproject hbase-region-inspector "0.1.0-SNAPSHOT" ;; Can't use ~ yet
+(defproject hbase-region-inspector "0.1.0-SNAPSHOT" ; Can't use ~ yet
   :description "HBase region dashboard"
   :url "http://example.com/FIXME"
   :license {:name "MIT"}
@@ -22,21 +21,20 @@
                  [hiccup "1.0.5"]
                  [selmer "0.8.2"]]
   :source-paths ["src/main"]
+  :target-path "target/%s"
   :plugins [[lein-ring "0.9.4"]    ; lein ring server
             [lein-bin "0.3.5"]     ; lein bin
             [codox "0.8.12"]       ; lein doc
             [lein-pprint "1.1.2"]] ; lein pprint
   :ring {:handler hbase-region-inspector.core/app
-         :nrepl {:start? true
-                 :port 9999}}
-
-  :jvm-opts ["-Xmx4g"]
-  :main ^:skip-aot hbase-region-inspector.core
-  :target-path "target/%s"
-
-  :bin {:jvm-opts ~(if-let [jvm-opts (System/getenv "JAVA_OPTS")]
+         :nrepl {:start? true :port 9999}}
+  :bin {:jvm-opts ~(if-let [jvm-opts (or (System/getenv "JVM_OPTS")
+                                         (System/getenv "JAVA_OPTS"))]
                      (clojure.string/split jvm-opts #"\s+")
                      ["-Xmx2g"])}
+  :jvm-opts ["-Xmx2g"]
+  :main ^:skip-aot hbase-region-inspector.core
+
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
   {:0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
