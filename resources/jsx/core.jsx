@@ -457,8 +457,8 @@ RegionByServer.Row = React.createClass({
         <td>
           <div className="progress droppable" data-server={this.props.name}>
             {regions.map(function(r) {
-              var width = this.props.max == 0 ? 0 :
-                100 * r[metric] / localSum * this.props.sum / this.props.max;
+              var width = (this.props.max == 0 || localSum == 0) ? 0 :
+                100 * r[metric] / this.props.max;
               return width <= 0 ? "" : (
                 <div className="progress-bar extra-info draggable"
                      data-region={r['encoded-name']}
