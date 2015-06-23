@@ -25,10 +25,9 @@ function colorFor(table) {
 }
 
 function schedule(job) {
-  refresh.ticks = 0;
-
   var tick = function() {
     if (refresh.ticks == refresh.interval) {
+      refresh.ticks = 0;
       job();
     } else {
       var sec = refresh.interval - refresh.ticks;
