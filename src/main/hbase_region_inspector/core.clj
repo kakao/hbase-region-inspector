@@ -164,8 +164,9 @@
                             :requests-rate (diff-fn % :requests)
                             :write-requests-rate (diff-fn % :write-requests)
                             :read-requests-rate (diff-fn % :read-requests)
-                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %)
-                            :html (build-html %)) new-regions)]
+                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
+                         new-regions)
+        new-regions (map #(assoc % :html (build-html %)) new-regions)]
     (reset! cached {:updated-at now
                     :regions new-regions})))
 
