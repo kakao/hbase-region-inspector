@@ -49,7 +49,7 @@ function fmt(val) {
 }
 
 function debug() {
-  console.log.apply(console, arguments);
+  // console.log.apply(console, arguments);
 }
 
 function disablePopover() {
