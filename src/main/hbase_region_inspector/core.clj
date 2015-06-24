@@ -114,10 +114,11 @@
                      (sort-by first util/compare-server-names
                               (group-by :server visible-regions)))
         ;; Function to sort the regions in the descending order
+        score-fn #(vector (- (metric %))
+                          (.indexOf all-tables (:table %)))
         sort-fn (if (= sort :metric)
-                  (fn [regions] (reverse (sort-by metric regions)))
-                  (fn [regions] (sort-by #(vector (.indexOf all-tables (:table %))
-                                                  (- (metric %))) regions)))
+                  (fn [regions] (sort-by score-fn regions))
+                  (fn [regions] (sort-by (comp vec reverse score-fn) regions)))
         ;; Sort the regions in each server
         grouped (map #(update-in % [:regions] sort-fn) grouped)
         ;; Find the local sum of the metric of each region
