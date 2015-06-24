@@ -343,6 +343,7 @@ var RegionByServer = React.createClass({
     var servers = this.props.result.servers;
     var error = this.props.result.error;
     var tables = this.props.result.tables;
+    var sum = servers.reduce(function(sum, server) { return sum + server.sum }, 0);
     return (
       <div>
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
@@ -400,7 +401,11 @@ var RegionByServer = React.createClass({
         <table className="table table-condensed barchart">
           <thead>
             <td></td>
-            <td className="pull-right text-muted">{servers.length > 0 ? fmt(servers[0].max) : ""}</td>
+            <td className="pull-right">
+              <span className="metric-value">
+                {servers.length > 0 ? ("Max: " + fmt(servers[0].max) + " / Total: " + fmt(sum)) : ""}
+              </span>
+            </td>
           </thead>
           <tbody>
           {servers.map(function(server) {
@@ -479,6 +484,9 @@ RegionByServer.Row = React.createClass({
                 </div>
               )
             }, this)}
+            <div className="metric-value" style={{display: "inline-block"}}>
+              {fmt(localSum)}
+            </div>
           </div>
         </td>
       </tr>

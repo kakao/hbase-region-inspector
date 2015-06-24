@@ -102,3 +102,17 @@ button.btn-xs {
 td.nowrap {
   white-space: nowrap;
 }
+
+.metric-value {
+  font-size: 75%;
+  color: grey;
+  font-weight: bold;
+}
+
+.progress div.metric-value {
+  margin-left: 3px;
+}
+
+tr.condensed .metric-value {
+  display: none !important;
+}
