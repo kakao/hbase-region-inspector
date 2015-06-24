@@ -87,7 +87,9 @@
                               all-regions))]
       (:server the-region))))
 
-(defn- byte-buffers->str [region]
+(defn- byte-buffers->str
+  "Returns an updated map with start-key and end-key as strings"
+  [region]
   (reduce (fn [region key]
             (assoc region key (hbase/byte-buffer->str (key region))))
           region
@@ -95,7 +97,7 @@
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
-  [metric sort tables]
+  [regions metric sort tables]
   (let [all-regions (remove :meta? (:regions @cached))
 
         ;; Sort the tables in descending order by the sum of the given metric
@@ -135,7 +137,7 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [metric]
+  [regions metric]
   (let [metric (or metric :store-file-size-mb)
         ;; Exclude hbase:meta table
         all-regions (filter (complement :meta?) (:regions @cached))
@@ -216,10 +218,12 @@
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
-           (regions-by-servers (keyword metric) (keyword sort) tables))))
+           (regions-by-servers (:regions @cached)
+                               (keyword metric) (keyword sort) tables))))
   (GET "/table_regions.json" {{metric :metric} :params}
        (response
-         (regions-by-tables (keyword metric))))
+         (regions-by-tables (:regions @cached)
+                            (keyword metric))))
   (PUT "/move_region" {{:keys [src dest region]} :params}
        (hbase/admin-let
          [admin @zookeeper]

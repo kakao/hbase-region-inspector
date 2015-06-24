@@ -18,4 +18,4 @@
                (local-ip-address))))
 
 (deftest test-keyword->str
-  (is (= "hello" (keyword->str :hello))))
+  (is (= "Hello" (keyword->str :hello))))
