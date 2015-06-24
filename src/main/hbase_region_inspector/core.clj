@@ -26,24 +26,24 @@
   [type val & props]
   (let [mb #(format "%d MB" (long %))
         kb #(format "%d KB" (long %))
-        rate #(format "%.2f" (double %))
-        props (first props)]
+        rate #(if (> % 10) (long %) (format "%.2f" (double %)))
+        count-rate #(if %2
+                      (format "%s (%s/sec)" %1 (rate %2))
+                      (str %1))
+        props (or (first props) {})]
     (case type
       :start-key                ["Start key" (hbase/byte-buffer->str val)]
       :end-key                  ["End key" (hbase/byte-buffer->str val)]
       :stores                   ["Storefiles" val]
       :store-file-size-mb       ["Data size"
-                                 (format "%s (%s)"
-                                         (mb val)
-                                         (mb (:store-uncompressed-size-mb props)))]
+                                 (if-let [uncmp (:store-uncompressed-size-mb props)]
+                                   (format "%s (%s)" (mb val) (mb uncmp))
+                                   (mb val))]
       :store-file-index-size-mb ["Index" (mb val)]
       :memstore-size-mb         ["Memstore" (mb val)]
-      :requests                 ["Requests"
-                                 (format "%s (%s/sec)" val (rate (:requests-rate props)))]
-      :read-requests            ["Reads"
-                                 (format "%s (%s/sec)" val (rate (:read-requests-rate props)))]
-      :write-requests           ["Writes"
-                                 (format "%s (%s/sec)" val (rate (:write-requests-rate props)))]
+      :requests                 ["Requests" (count-rate val (:requests-rate props))]
+      :read-requests            ["Reads" (count-rate val (:read-requests-rate props))]
+      :write-requests           ["Writes" (count-rate val (:write-requests-rate props))]
       :root-index-size-kb       ["Root index" (kb val)]
       :bloom-size-kb            ["Bloom filter" (kb val)]
       :total-index-size-kb      ["Total index" (kb val)]
