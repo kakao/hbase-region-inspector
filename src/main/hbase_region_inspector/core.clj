@@ -23,24 +23,31 @@
 
 (defn format-val
   "String formatter for region properties"
-  [type val]
+  [type val & props]
   (let [mb #(format "%d MB" (long %))
         kb #(format "%d KB" (long %))
-        rate #(format "%.2f" (double %))]
+        rate #(format "%.2f" (double %))
+        props (first props)]
     (case type
-      :start-key                  ["Start key" (hbase/byte-buffer->str val)]
-      :end-key                    ["End key" (hbase/byte-buffer->str val)]
-      :store-file-size-mb         ["Compressed" (mb val)]
-      :store-uncompressed-size-mb ["Uncompressed" (mb val)]
-      :store-file-index-size-mb   ["Index" (mb val)]
-      :memstore-size-mb           ["Memstore" (mb val)]
-      :requests-rate              ["Requests/sec" (rate val)]
-      :read-requests-rate         ["Reads/sec" (rate val)]
-      :write-requests-rate        ["Writes/sec" (rate val)]
-      :root-index-size-kb         ["Root index" (kb val)]
-      :bloom-size-kb              ["Bloom filter" (kb val)]
-      :total-index-size-kb        ["Total index" (kb val)]
-      :compaction                 ["Compaction" (apply format "%d / %d" val)]
+      :start-key                ["Start key" (hbase/byte-buffer->str val)]
+      :end-key                  ["End key" (hbase/byte-buffer->str val)]
+      :stores                   ["Storefiles" val]
+      :store-file-size-mb       ["Data size"
+                                 (format "%s (%s)"
+                                         (mb val)
+                                         (mb (:store-uncompressed-size-mb props)))]
+      :store-file-index-size-mb ["Index" (mb val)]
+      :memstore-size-mb         ["Memstore" (mb val)]
+      :requests                 ["Requests"
+                                 (format "%s (%s/sec)" val (rate (:requests-rate props)))]
+      :read-requests            ["Reads"
+                                 (format "%s (%s/sec)" val (rate (:read-requests-rate props)))]
+      :write-requests           ["Writes"
+                                 (format "%s (%s/sec)" val (rate (:write-requests-rate props)))]
+      :root-index-size-kb       ["Root index" (kb val)]
+      :bloom-size-kb            ["Bloom filter" (kb val)]
+      :total-index-size-kb      ["Total index" (kb val)]
+      :compaction               ["Compaction" (apply format "%d / %d" val)]
       [(util/keyword->str (str type)) val])))
 
 (defn build-html
@@ -51,17 +58,16 @@
       [:h3 table " " [:small encoded-name]]
       [:table {:class "table table-condensed table-striped"}
        [:tbody
-        (map #(let [[k v] (format-val % (% props))] [:tr [:th k] [:td v]])
+        (map #(let [[k v] (format-val % (% props) props)] [:tr [:th k] [:td v]])
              (filter
                #(% props)
                [:start-key :end-key
-                :store-file-size-mb :store-uncompressed-size-mb
+                :store-file-size-mb
+                :stores
+                :memstore-size-mb
                 :requests
                 :read-requests
                 :write-requests
-                :requests-rate
-                :read-requests-rate
-                :write-requests-rate
                 :compaction]))]])))
 
 (defn regions

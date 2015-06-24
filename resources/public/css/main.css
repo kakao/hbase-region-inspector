@@ -76,8 +76,8 @@ div.popover{
 div.popover * {
   margin-top: 5px !important;
   margin-bottom: 5px !important;
-  padding-top: 1px !important;
-  padding-bottom: 1px !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
 }
 
 .form-group {
