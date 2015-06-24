@@ -481,7 +481,7 @@ RegionByServer.Row = React.createClass({
                              borderRight: '1px solid ' + colorFor(r.table)[1]}}
                      data-content={r.html}
                      onClick={this.props.callback.bind(this.props.parent, r.table)}>
-                  {(!condensed && width > 2) ? r.table[0] : ''}
+                  {(!condensed && width > 2) ? r.table.split(":").pop()[0] : ''}
                 </div>
               )
             }, this)}
