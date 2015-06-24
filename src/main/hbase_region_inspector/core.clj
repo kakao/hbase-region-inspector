@@ -58,7 +58,8 @@
       [:h3 table " " [:small encoded-name]]
       [:table {:class "table table-condensed table-striped"}
        [:tbody
-        (map #(let [[k v] (format-val % (% props) props)] [:tr [:th k] [:td v]])
+        (map #(let [[k v] (format-val % (% props) props)]
+                [:tr [:th {:class "col-xs-2"} k] [:td v]])
              (filter
                #(% props)
                [:start-key :end-key

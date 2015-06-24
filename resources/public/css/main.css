@@ -68,16 +68,21 @@ div.progress-bar {
   border: 2px solid red;
 }
 
-div.popover{
+div.popover {
   /* Max Width of the popover (depending on the container!) */
   max-width: 100%;
 }
 
-div.popover * {
-  margin-top: 5px !important;
-  margin-bottom: 5px !important;
-  padding-top: 3px !important;
+div.popover table * {
+  margin-top:     5px !important;
+  margin-bottom:  5px !important;
+  padding-top:    3px !important;
   padding-bottom: 3px !important;
+}
+
+div.popover h3, div.popover table {
+  margin-top:     5px !important;
+  margin-bottom:  5px !important;
 }
 
 .form-group {
