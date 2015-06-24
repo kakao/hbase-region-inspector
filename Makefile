@@ -26,4 +26,14 @@ watch:
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
 	lein with-profile $(profile) ring server-headless
 
-.PHONY: all build bin release js repl watch
+test:
+	lein with-profile $(profile) test
+
+autotest:
+	# https://github.com/jakemcc/lein-test-refresh/issues/35
+	lein with-profile $(profile),base test-refresh
+
+doc:
+	lein with-profile $(profile) doc
+
+.PHONY: all build bin release js repl watch doc test autotest

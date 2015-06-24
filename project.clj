@@ -25,6 +25,7 @@
   :plugins [[lein-ring "0.9.4"]    ; lein ring server
             [lein-bin "0.3.5"]     ; lein bin
             [codox "0.8.12"]       ; lein doc
+            [com.jakemccrary/lein-test-refresh "0.10.0"]
             [lein-pprint "1.1.2"]] ; lein pprint
   :ring {:handler hbase-region-inspector.core/app
          :nrepl {:start? true :port 9999}}
