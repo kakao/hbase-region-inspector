@@ -431,6 +431,7 @@ var MetricsTab = React.createClass({
               ["write-requests-rate", "Writes/sec"],
               ["read-requests",       "Reads"],
               ["read-requests-rate",  "Reads/sec"],
+              ["stores",              "Storefiles"],
               ["memstore-size-mb",    "Memstore"]].map(function(pair) {
                 return (
                   <li key={"rs-tab-metric-" + pair[0]} role="presentation" className={pair[0] == this.props.metric ? "active" : ""}>
