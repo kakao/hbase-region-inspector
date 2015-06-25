@@ -133,7 +133,7 @@
                     nil)]
     ;; Build the result list
     {:servers (map #(assoc % :max group-max) grouped)
-     :tables all-tables}))
+     :tables (or all-tables [])}))
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
