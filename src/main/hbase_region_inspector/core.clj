@@ -87,7 +87,7 @@
                               all-regions))]
       (:server the-region))))
 
-(defn- byte-buffers->str
+(defn byte-buffers->str
   "Returns an updated map with start-key and end-key as strings"
   [region]
   (reduce (fn [region key]
