@@ -396,7 +396,7 @@ var RegionByServer = React.createClass({
         </form>
 
         {servers.length > 0 ? "" :
-          <div className="alert alert-warning" role="alert">No servers found</div>
+          <div className="alert alert-warning" role="alert">No data found</div>
         }
         <table className="table table-condensed barchart">
           <thead>
@@ -548,7 +548,7 @@ var RegionByTable = React.createClass({
           </div>
         </form>
         {this.props.result.length > 0 ? "" :
-          <div className="alert alert-warning" role="alert">No tables found</div>
+          <div className="alert alert-warning" role="alert">No data found</div>
         }
         {this.props.result.map(function(table) {
           return <RegionByTable.Row key={table.name} sum={table.sum} metric={this.props.metric}
