@@ -6,6 +6,15 @@
 usage: hbase-region-inspector QUORUM[/ZKPORT] PORT
 ```
 
+## Prerequisites
+
+- [NPM](https://www.npmjs.com/)
+- [Leiningen](https://github.com/technomancy/leiningen)
+
+```sh
+brew install npm leiningen
+```
+
 ## Development
 
 ```sh
