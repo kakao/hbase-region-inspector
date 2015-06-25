@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.core
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.string :as str]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
@@ -14,6 +15,9 @@
 
 ;;; ZooKeeper quorum we point to
 (defonce zookeeper (atom "localhost"))
+
+;;; Whether we should allow region relocation or not
+(defonce read-only? (atom false))
 
 ;;; Cache the result of previous inspection
 (defonce cached (atom {:updated-at nil :regions []}))
@@ -203,6 +207,7 @@
 (defroutes app-routes
   (GET "/" []
        (render-file "public/index.html" {:zookeeper @zookeeper
+                                         :read-only @read-only?
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))
@@ -225,6 +230,8 @@
          (regions-by-tables (:regions @cached)
                             (keyword metric))))
   (PUT "/move_region" {{:keys [src dest region]} :params}
+       (when @read-only?
+         (throw (Exception. "Read-only mode. Not allowed.")))
        (hbase/admin-let
          [admin @zookeeper]
          (.move admin (.getBytes region) (.getBytes dest))
@@ -276,14 +283,17 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: hbase-region-inspector QUORUM[/ZKPORT] PORT")
+  (println "usage: hbase-region-inspector [--read-only] QUORUM[/ZKPORT] PORT")
   (System/exit 1))
 
 (defn -main [& args]
-  (when (not= 2 (count args)) (exit "invalid number of arguments"))
-  (try
-    (let [[zk port] args
-          port (Integer/parseInt port)]
-      (bootstrap zk port true))
-    (catch NumberFormatException e (exit "invalid port"))))
+  (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
+        opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
+    (reset! read-only? (contains? opts :read-only))
+    (when (not= 2 (count args)) (exit "invalid number of arguments"))
+    (try
+      (let [[zk port] args
+            port (Integer/parseInt port)]
+        (bootstrap zk port true))
+      (catch NumberFormatException e (exit "invalid port")))))
 
