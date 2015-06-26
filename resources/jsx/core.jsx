@@ -16,9 +16,9 @@ var colors = {};
 
 function colorFor(table) {
   if (!colors[table]) {
-    var h = Math.floor(Math.random() * 360)
-      , s = 30 + Math.floor(Math.random() * 30)
-      , l = 60 + Math.floor(Math.random() * 20);
+    var h = Math.random() * 360
+      , s = 30 + Math.random() * 20
+      , l = 60 + Math.random() * 20;
     return colors[table] = [$.husl.toHex(h, s, l), $.husl.toHex(h, s, l - 10)];
   }
   return colors[table];
