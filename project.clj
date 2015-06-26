@@ -36,6 +36,8 @@
   :jvm-opts ["-Xmx2g"]
   :main ^:skip-aot hbase-region-inspector.core
 
+  :uberjar-exclusions [#".*/\.module-cache/"]
+
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
   {:0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
