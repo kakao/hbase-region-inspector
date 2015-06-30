@@ -40,7 +40,8 @@
 
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
-  {:0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
+  {:0.94-test {:dependencies [[org.apache.hbase/hbase-testing-util "0.94.15-cdh4.7.1"]]}
+   :0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
                   :uberjar-name ~(:0.94 jars)
                   :source-paths ["src/hbase-0.94"]
                   ;; lein with-profile 0.94 deps :tree
@@ -52,6 +53,7 @@
                                   [javax.xml.bind/jaxb-api org.slf4j/slf4j-api org.slf4j/slf4j-log4j12]]
                                  [org.slf4j/slf4j-api "1.7.12"]
                                  [org.slf4j/slf4j-log4j12 "1.7.12"]]}
+   :0.98-test {:dependencies [[org.apache.hbase/hbase-testing-util "0.98.6-cdh5.3.3"]]}
    :0.98 ^:leaky {:bin {:name ~(:0.98 bins)}
                   :uberjar-name ~(:0.98 jars)
                   :source-paths ["src/hbase-0.98"]

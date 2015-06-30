@@ -1,6 +1,13 @@
 (ns hbase-region-inspector.hbase-test
   (:require [clojure.test :refer :all]
-            [hbase-region-inspector.hbase :refer :all]))
+            [hbase-region-inspector.hbase :refer :all])
+  (:import org.apache.hadoop.hbase.HBaseTestingUtility))
+
+#_(def hbase (HBaseTestingUtility.))
+#_(use-fixtures :once (fn [f]
+                        (.startMiniCluster hbase)
+                        (f)
+                        (.shutdownMiniCluster hbase)))
 
 (deftest test-byte-buffer->str
   (let [chars (vec (.getBytes "hello"))

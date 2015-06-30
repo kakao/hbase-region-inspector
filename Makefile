@@ -27,11 +27,11 @@ watch:
 	lein with-profile $(profile) ring server-headless
 
 test:
-	lein with-profile $(profile) test
+	lein with-profile $(profile),$(profile)-test test
 
 autotest:
 	# https://github.com/jakemcc/lein-test-refresh/issues/35
-	lein with-profile $(profile),base test-refresh
+	lein with-profile $(profile),$(profile)-test,base test-refresh
 
 doc:
 	lein with-profile $(profile) doc
