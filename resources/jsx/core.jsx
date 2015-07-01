@@ -229,7 +229,7 @@ var App = React.createClass({
               <a className="navbar-brand" href="/">
                 <span className="glyphicon glyphicon-align-left" aria-hidden="true"></span>
               </a>
-              <a className="navbar-brand" href="/">
+              <a className="navbar-brand" href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>
                 hbase-region-inspector
               </a>
             </div>
