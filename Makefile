@@ -19,12 +19,12 @@ release:
 	cp -v target/$(profile)+uberjar/hbase-region-inspector-$(profile)-*.jar releases/
 
 repl:
-	lein with-profile $(profile) repl :connect localhost:9999
+	lein with-profile $(profile),$(profile)-test repl :connect localhost:9999
 
 watch:
 	-killall -9 jsx
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
-	lein with-profile $(profile) ring server-headless
+	lein with-profile $(profile),$(profile)-test ring server-headless
 
 test:
 	lein with-profile $(profile),$(profile)-test test
