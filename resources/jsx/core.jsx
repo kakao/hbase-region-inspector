@@ -222,7 +222,6 @@ var App = React.createClass({
     enablePopover();
   },
   changeMenu: function(menu) {
-    // TODO state = condensed
     refresh.version++;
     refreshApp(menu, {});
   },
@@ -252,7 +251,7 @@ var App = React.createClass({
 
               <ul className="nav navbar-nav navbar-right">
                 <li className="navbar-text">
-                  {zookeeper}
+                  {_zookeeper}
                 </li>
               </ul>
             </div>
@@ -301,7 +300,7 @@ var RegionByServer = React.createClass({
   },
   getInitialState: function() {
     return {
-      condensed: false
+      condensed: _condensed
     }
   },
   componentDidUpdate: function(prevProps, prevState) {
@@ -325,6 +324,7 @@ var RegionByServer = React.createClass({
     this.refresh({ sort: val });
   },
   setLayout: function(val) {
+    _condensed = val;
     this.setState({condensed: val});
   },
   setTable: function(val) {
@@ -507,7 +507,7 @@ RegionByServer.Row = React.createClass({
 var RegionByTable = React.createClass({
   getInitialState: function() {
     return {
-      condensed: false
+      condensed: _condensed
     }
   },
   getDefaultProps: function() {
@@ -533,6 +533,7 @@ var RegionByTable = React.createClass({
     refreshApp("tb", { metric: val });
   },
   setLayout: function(val) {
+    _condensed = val;
     this.setState({condensed: val});
   },
   render: function() {
