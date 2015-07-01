@@ -55,17 +55,23 @@ function debug() {
 }
 
 function disablePopover() {
-  $(".extra-info").popover('disable')
+  [".extra-info", ".extra-info-right"].map(function(klass) {
+    $(klass).popover('disable')
+  });
 }
 
-function enablePopover(pos) {
-  $(".extra-info").popover({
-    trigger:   "hover",
-    html:      true,
-    placement: pos,
-    container: "body"
-  });
-  $(".extra-info").popover('enable')
+function enablePopover() {
+  var enable = function(klass, pos) {
+    $(klass).popover({
+      trigger:   "hover",
+      html:      true,
+      placement: pos,
+      container: "body"
+    });
+    $(klass).popover('enable')
+  }
+  enable(".extra-info", "top");
+  enable(".extra-info-right", "right");
 }
 
 function refreshApp(menu, opts) {
@@ -108,7 +114,7 @@ function refreshApp(menu, opts) {
         stop: function(e, ui) {
           debug("Drag stopped");
           $(e.target).show();
-          enablePopover(menu == "rs" ? "top" : "right");
+          enablePopover();
         },
         revert: function(valid) {
           if (!valid) {
@@ -213,6 +219,7 @@ var App = React.createClass({
     if (this.spinner != null) {
       this.spinner.stop();
     }
+    enablePopover();
   },
   changeMenu: function(menu) {
     // TODO state = condensed
@@ -303,7 +310,6 @@ var RegionByServer = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    enablePopover("top");
     $("table").fadeTo(100, 1.0);
 
     // Schedule next update
@@ -466,7 +472,7 @@ RegionByServer.Row = React.createClass({
       <tr className={condensed}>
         <td className="text-muted col-xs-1 nowrap">
           <a target="_blank" href={url}>
-            <div className="mono-space">{shortName}</div>
+            <div className="mono-space extra-info-right" data-content={this.props.html}>{shortName}</div>
           </a>
         </td>
         <td>
@@ -515,7 +521,6 @@ var RegionByTable = React.createClass({
   },
   componentDidMount: function() {
     debug("did-mount")
-    enablePopover("right");
     $("table").fadeTo(100, 1.0);
     // Schedule next update
     schedule(function() {

@@ -27,6 +27,29 @@
   [buf]
   (Bytes/toStringBinary buf))
 
+(defn server-load->map
+  [load]
+  {:max-heap-mb        (.getMaxHeapMB load)
+   :used-heap-mb       (.getUsedHeapMB load)
+   :regions            (.getNumberOfRegions load)
+   :requests-rate      (.getNumberOfRequests load)
+   :store-files        (.getStorefiles load)
+   :store-file-size-mb (.getStorefileSizeInMB load)})
+
+(defn collect-server-info
+  "Collects server statistics"
+  [admin]
+  (let [cluster-status (.getClusterStatus admin)
+        server-names (.getServers cluster-status)
+        server-loads (map #(.getLoad cluster-status %) server-names)]
+    (into
+      {}
+      (map (fn [[name load]]
+             (let [name (str name)]
+               [name
+                (assoc (server-load->map load) :name name)]))
+           (zipmap server-names server-loads)))))
+
 (def collect-region-info hbase-impl/collect-region-info)
 (def region-map hbase-impl/region-map)
 (def bytes-comp Bytes/BYTES_COMPARATOR)

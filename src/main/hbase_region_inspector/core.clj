@@ -52,9 +52,11 @@
       :bloom-size-kb            ["Bloom filter" (kb val)]
       :total-index-size-kb      ["Total index" (kb val)]
       :compaction               ["Compaction" (apply format "%d / %d" val)]
+      :used-heap-mb             ["Used heap" (str val " MB")]
+      :max-heap-mb              ["Max heap" (str val " MB")]
       [(util/keyword->str (str type)) val])))
 
-(defn build-html
+(defn build-region-popover
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
   [props]
   (let [{:keys [table encoded-name]} props]
@@ -66,7 +68,8 @@
                 [:tr [:th {:class "col-xs-2"} k] [:td v]])
              (filter
                #(% props)
-               [:start-key :end-key
+               [:server
+                :start-key :end-key
                 :store-file-size-mb
                 :stores
                 :memstore-size-mb
@@ -75,12 +78,32 @@
                 :write-requests
                 :compaction]))]])))
 
-(defn regions
-  "Collects the information of online regions"
+(defn build-server-popover
+  "Builds a small HTML snippet for each server to be used in bootstrap popover"
+  [props]
+  (let [{:keys [name]} props]
+    (h/html
+      [:h3 name]
+      [:table {:class "table table-condensed table-striped"}
+       [:tbody
+        (map #(let [[k v] (format-val % (% props) props)]
+                [:tr [:th {:class "col-xs-2"} k] [:td v]])
+             (filter
+               #(% props)
+               [:requests-rate
+                :regions
+                :store-file-size-mb
+                :store-files
+                :used-heap-mb
+                :max-heap-mb]))]])))
+
+(defn collect-info
+  "Collects information from hbase"
   [zk]
   (hbase/admin-let
     [admin zk]
-    (hbase/collect-region-info admin)))
+    [(doall (hbase/collect-region-info admin))
+     (doall (hbase/collect-server-info admin))]))
 
 (defn region-location?
   "Finds the host region server of the region"
@@ -103,6 +126,7 @@
   "Generates output for /server_regions.json. Regions grouped by their servers."
   [regions metric sort tables]
   (let [all-regions (remove :meta? (:regions @cached))
+        servers (:servers @cached)
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
@@ -136,7 +160,9 @@
                     (apply max (map :sum grouped))
                     nil)]
     ;; Build the result list
-    {:servers (map #(assoc % :max group-max) grouped)
+    {:servers (map #(assoc %
+                           :max group-max
+                           :html (:html (servers (:name %)))) grouped)
      :tables (or all-tables [])}))
 
 (defn regions-by-tables
@@ -169,7 +195,7 @@
   (util/info "Updating regions")
   (let [old-regions (into {} (for [region (:regions @cached)]
                                [(:name region) region]))
-        new-regions (regions @zookeeper)
+        [new-regions servers] (collect-info @zookeeper)
         prev-time (:updated-at @cached)
         now (System/currentTimeMillis)
         interval (- now (or prev-time now))
@@ -187,9 +213,12 @@
                             :read-requests-rate (diff-fn % :read-requests)
                             :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
                          new-regions)
-        new-regions (map #(assoc % :html (build-html %)) new-regions)]
+        new-regions (map #(assoc % :html (build-region-popover %)) new-regions)
+        servers (into {} (for [[k v] servers]
+                           [k (assoc v :html (build-server-popover v))]))]
     (reset! cached {:updated-at now
-                    :regions new-regions})))
+                    :regions new-regions
+                    :servers servers})))
 
 (defn start-periodic-updater!
   "Starts a thread that periodically runs update-regions!"

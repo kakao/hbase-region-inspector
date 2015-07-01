@@ -14,15 +14,15 @@
   (is (= ["Requests" "3000 (314/sec)"]
          (format-val :requests 3000 {:requests-rate 314.1592}))))
 
-(deftest test-build-html
+(deftest test-build-region-popover
   (is (= (str
            "<h3>foobar <small>baz</small></h3>"
            "<table class=\"table table-condensed table-striped\">"
            "<tbody><tr><th class=\"col-xs-2\">Data size</th><td>1000 MB (2000 MB)</td></tr></tbody></table>")
-         (build-html {:table "foobar"
-                      :encoded-name "baz"
-                      :store-file-size-mb 1000
-                      :store-uncompressed-size-mb 2000}))))
+         (build-region-popover {:table "foobar"
+                                :encoded-name "baz"
+                                :store-file-size-mb 1000
+                                :store-uncompressed-size-mb 2000}))))
 
 (deftest test-byte-buffers->str
   (is (= {:start-key "hello"
