@@ -76,6 +76,7 @@ function enablePopover() {
 
 function refreshApp(menu, opts) {
   clearTimeout(refresh.timeout);
+  refresh.version++;
 
   var url = menu == "rs" ? "/server_regions.json" : "/table_regions.json"
   var currentVersion = refresh.version;
@@ -88,7 +89,6 @@ function refreshApp(menu, opts) {
         debug("already updated: " + currentVersion + "/" + refresh.version);
         return;
       }
-      refresh.version++;
       React.render(<App {...opts} menu={menu} result={result}/>, document.body);
       $(".draggable").draggable({
         helper: 'clone',
@@ -222,7 +222,6 @@ var App = React.createClass({
     enablePopover();
   },
   changeMenu: function(menu) {
-    refresh.version++;
     refreshApp(menu, {});
   },
   render: function() {
