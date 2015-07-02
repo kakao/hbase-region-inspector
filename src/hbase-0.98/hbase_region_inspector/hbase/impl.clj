@@ -1,6 +1,6 @@
 (ns hbase-region-inspector.hbase.impl
-  (:require [clojure.pprint :refer [pprint]]
-            [clojure.set :as set])
+  (:require [clojure.set :as set]
+            [hbase-region-inspector.hbase.base :as base])
   (:import org.apache.hadoop.hbase.util.Bytes
            java.nio.ByteBuffer))
 
@@ -9,29 +9,14 @@
 (defn info->map
   "Builds map from HRegionInfo"
   [info]
-  {:encoded-name (.getEncodedName info)
-   :table        (str (.getTable info))
-   :start-key    (.getStartKey info)
-   :end-key      (.getEndKey info)
-   :meta?        (.isMetaRegion info)})
+  (assoc (base/info->map info)
+         :table (str (.getTable info))))
 
 (defn load->map
   "Builds map from RegionLoad"
   [load]
-  {:compacted-kvs              (.getCurrentCompactedKVs load)
-   :memstore-size-mb           (.getMemStoreSizeMB load)
-   :read-requests              (.getReadRequestsCount load)
-   :requests                   (.getRequestsCount load)
-   :root-index-size-kb         (.getRootIndexSizeKB load)
-   :store-file-index-size-mb   (.getStorefileIndexSizeMB load)
-   :store-files                (.getStorefiles load)
-   :store-file-size-mb         (.getStorefileSizeMB load)
-   :stores                     (.getStores load)
-   :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)
-   :total-compacting-kvs       (.getTotalCompactingKVs load)
-   :bloom-size-kb              (.getTotalStaticBloomSizeKB load)
-   :total-index-size-kb        (.getTotalStaticIndexSizeKB load)
-   :write-requests             (.getWriteRequestsCount load)})
+  (assoc (base/load->map load)
+         :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)))
 
 ;; Get HRegionInfo from HBaseAdmin
 (defn- online-regions
@@ -70,22 +55,10 @@
 
 (defn collect-region-info
   "Returns the region information as a list of maps"
-  [admin]
-  (let [cluster-status (.getClusterStatus admin)
-        server-names (.getServers cluster-status)
+  [admin cluster-status]
+  (let [server-names (.getServers cluster-status)
         aggregated (map (partial aggregate-two-sources cluster-status admin)
                         server-names)]
-    (for [server-regions aggregated
-          [k v] server-regions]
+    (for [region->info aggregated
+          [k v] region->info]
       (assoc v :name (Bytes/toStringBinary (.array k))))))
-
-(defn region-map
-  "Returns a map that associates encoded region name with the name of the
-  server that holds the regions. Not guaranteed to return all regions."
-  [admin]
-  (let [cluster-status (.getClusterStatus admin)
-        server-names (.getServers cluster-status)
-        all-regions (for [server-name server-names
-                          region-info (.getOnlineRegions admin server-name)]
-                      [(.getEncodedName region-info) (.getServerName server-name)])]
-    (into {} all-regions)))

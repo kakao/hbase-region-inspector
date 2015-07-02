@@ -222,7 +222,7 @@ var App = React.createClass({
     enablePopover();
   },
   changeMenu: function(menu) {
-    refreshApp(menu, {});
+    refreshApp(menu, {sort: menu == "rg" ? "start-key" : "metric"});
   },
   render: function() {
     debug(this.props.menu);
@@ -241,10 +241,13 @@ var App = React.createClass({
             <div className="collapse navbar-collapse">
               <ul className="nav navbar-nav">
                 <li className={this.props.menu == "rs" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>Region servers</a>
+                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>Servers</a>
                 </li>
                 <li className={this.props.menu == "tb" ? "active" : ""}>
                   <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tb")}>Tables</a>
+                </li>
+                <li className={this.props.menu == "rg" ? "active" : ""}>
+                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rg")}>Regions</a>
                 </li>
               </ul>
 
@@ -263,7 +266,9 @@ var App = React.createClass({
                 <span className="label label-danger">{this.props.error.toUpperCase()}</span> Failed to collect data from server
               </h5>
             </div>
-          ) : this.props.menu == "rs" ? <RegionByServer {...this.props}/> : <RegionByTable {...this.props}/>}
+          ) : this.props.menu == "rs" ?
+                <RegionByServer {...this.props}/> :
+                <RegionByTable sort={this.props.menu == "rg" ? "start-key" : ""} {...this.props}/>}
         </div>
         <div id="modal" className="modal">
           <div className="modal-dialog">
@@ -359,7 +364,7 @@ var RegionByServer = React.createClass({
           <div className="form-group">
             <label className="control-label col-xs-1">Sort</label>
             <div className="col-xs-11">
-              <label className="radio-inline">
+              <label className="radio-inline col-xs-1">
                 <input type="radio" name="sortOptions" value="metric" defaultChecked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}>Region</input>
               </label>
               <label className="radio-inline">
@@ -371,7 +376,7 @@ var RegionByServer = React.createClass({
           <div className="form-group">
             <label className="control-label col-xs-1">Layout</label>
             <div className="col-xs-11">
-              <label className="radio-inline">
+              <label className="radio-inline col-xs-1">
                 <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
               </label>
               <label className="radio-inline">
@@ -408,12 +413,14 @@ var RegionByServer = React.createClass({
         }
         <table className="table table-condensed barchart">
           <thead>
-            <td></td>
-            <td className="pull-right">
-              <span className="metric-value">
-                {servers.length > 0 ? ("Max: " + fmt(servers[0].max) + " / Total: " + fmt(sum)) : ""}
-              </span>
-            </td>
+            <tr>
+              <td></td>
+              <td className="pull-right">
+                <span className="metric-value">
+                  {servers.length > 0 ? ("Max: " + fmt(servers[0].max) + " / Total: " + fmt(sum)) : ""}
+                </span>
+              </td>
+            </tr>
           </thead>
           <tbody>
           {servers.map(function(server) {
@@ -512,6 +519,8 @@ var RegionByTable = React.createClass({
   getDefaultProps: function() {
     return {
       metric: "store-file-size-mb",
+      sort:   "metric",
+      menu:   "tb"
     }
   },
   componentDidUpdate: function(prevProps, prevState) {
@@ -524,12 +533,18 @@ var RegionByTable = React.createClass({
     // Schedule next update
     schedule(function() {
       debug("refresh table-regions");
-      refreshApp("tb", { metric: this.props.metric });
+      this.refresh({}, true);
     }.bind(this));
   },
   setMetric: function(val) {
-    $("table").fadeTo(100, 0.5);
-    refreshApp("tb", { metric: val });
+    this.refresh({ metric: val });
+  },
+  setSort: function(val) {
+    this.refresh({ sort: val });
+  },
+  refresh: function(opts, nofade) {
+    if (!nofade) $("table").fadeTo(100, 0.5);
+    refreshApp(this.props.menu, _.extend(_.omit(this.props, "result"), opts))
   },
   setLayout: function(val) {
     _condensed = val;
@@ -544,9 +559,21 @@ var RegionByTable = React.createClass({
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
         <form className="form-horizontal">
           <div className="form-group">
+            <label className="control-label col-xs-1">Sort</label>
+            <div className="col-xs-11">
+              <label className="radio-inline col-xs-1">
+                <input type="radio" name="sortOptions" value="table" checked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}>Value</input>
+              </label>
+              <label className="radio-inline">
+                <input type="radio" name="sortOptions" value="metric" checked={this.props.sort == "start-key"} onChange={this.setSort.bind(this, "start-key")}>Start key</input>
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
             <label className="control-label col-xs-1">Layout</label>
             <div className="col-xs-11">
-              <label className="radio-inline">
+              <label className="radio-inline col-xs-1">
                 <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
               </label>
               <label className="radio-inline">
@@ -558,22 +585,91 @@ var RegionByTable = React.createClass({
         {this.props.result.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No data found</div>
         }
-        {this.props.result.map(function(table) {
-          return <RegionByTable.Row key={table.name} sum={table.sum} metric={this.props.metric}
-                                    condensed={this.state.condensed} name={table.name} regions={table.regions}/>
-        }, this)}
+        {this.props.menu == "rg" ?
+          this.props.result.map(function(table) {
+            return <RegionByTable.Regions key={table.name} sum={table.sumh} metric={this.props.metric}
+                                      condensed={this.state.condensed} name={table.name} regions={table.regions}/>
+          }, this) :
+          <RegionByTable.Table tables={this.props.result} condensed={this.state.condensed} metric={this.props.metric}/>}
       </div>
     )
   }
 })
 
-RegionByTable.Row = React.createClass({
+RegionByTable.Table = React.createClass({
+  render: function() {
+    var tables = this.props.tables;
+    var metric = this.props.metric;
+    var max = this.props.tables.reduce(function(cmax, curr) {
+      return curr.sum > cmax ? curr.sum : cmax;
+    }, 0);
+    var sum = this.props.tables.reduce(function(sum, curr) {
+      return sum + curr.sum;
+    }, 0);
+    return (
+      <table className="table table-condensed barchart">
+        <thead>
+          <tr>
+            <td></td>
+            <td className="pull-right">
+              <span className="metric-value">
+                {tables.length > 0 ? ("Max: " + fmt(max) + " / Total: " + fmt(sum)) : ""}
+              </span>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          {tables.map(function(table, idx) {
+            return <RegionByTable.TableRow key={table.name} index={idx} condensed={this.props.condensed} max={max} metric={metric} {...table} />
+          }, this)}
+        </tbody>
+      </table>
+    );
+  }
+});
+
+RegionByTable.TableRow = React.createClass({
+  render: function() {
+    var condensed = this.props.condensed ? " condensed" : ""
+    return (
+      <tr className={this.props.condensed ? "condensed" : ""}>
+        <td className="text-muted col-xs-1">
+          <div className="mono-space">
+            {this.props.name}
+          </div>
+        </td>
+        <td>
+          <div className="progress">
+            {this.props.regions.map(function(r) {
+              var width = (this.props.max == 0) ? 0 :
+                100 * r[this.props.metric] / this.props.max;
+              var klass = "progress-bar extra-info" + (this.props.index > 2 ? "" : "-right")
+              return width == 0 ? "" : (
+                <div className={klass}
+                     key={r['encoded-name']}
+                     data-content={r.html}
+                     style={{width: width + '%',
+                             backgroundColor: colorFor(r.table)[0],
+                             borderRight: '1px solid ' + colorFor(r.table)[1]}}>
+                </div>
+              );
+            }, this)}
+            <div className="metric-value" style={{display: "inline-block"}}>
+              {fmt(this.props.sum)}
+            </div>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+});
+
+RegionByTable.Regions = React.createClass({
   render: function() {
     var metric = this.props.metric;
-    var max = this.props.regions.reduce(function(prev, curr) {
-      return curr[metric] > prev ? curr[metric] : prev
+    var max = this.props.regions.reduce(function(cmax, curr) {
+      return curr[metric] > cmax ? curr[metric] : cmax;
     }, 0);
-    var condensed = this.props.condensed ? " condensed" : ""
     return (
       <div className="row">
         <div className="col-xs-12">
@@ -584,9 +680,9 @@ RegionByTable.Row = React.createClass({
               var width = max == 0 ? 0 : 100 * r[this.props.metric] / max;
               var val = r[this.props.metric];
               return (
-                <tr key={r['encoded-name']} className={condensed}>
+                <tr key={r['encoded-name']} className={this.props.condensed ? "condensed" : ""}>
                   <td className="text-muted col-xs-1">
-                    <div data-content={r.html} className="mono-space extra-info">
+                    <div data-content={r.html} className="mono-space extra-info-right">
                       {r['encoded-name']}
                     </div>
                   </td>
@@ -596,7 +692,7 @@ RegionByTable.Row = React.createClass({
                            style={{width: width + '%',
                                    color: colorFor(r.table)[1],
                                    backgroundColor: colorFor(r.table)[0]}}>
-                        {(!condensed && width > 2) ? fmt(val) : ""}
+                        {(!this.props.condensed && width > 2) ? fmt(val) : ""}
                       </div>
                     </div>
                   </td>

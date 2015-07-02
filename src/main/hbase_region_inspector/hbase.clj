@@ -5,29 +5,8 @@
            org.apache.hadoop.hbase.HBaseConfiguration
            org.apache.hadoop.hbase.util.Bytes))
 
-;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
-(defn- connect-admin [zk]
-  (let [[quorum port] (str/split zk #"/")
-        port (or port 2181)]
-    (HBaseAdmin.
-      (doto (HBaseConfiguration/create)
-        (.set "hbase.zookeeper.quorum" quorum)
-        (.setInt "hbase.zookeeper.property.clientPort" port)
-        (.setInt "hbase.client.retries.number" 2)
-        (.setInt "hbase.regions.slop" 0)
-        (.setInt "zookeeper.recovery.retry" 2)))))
-
-(defmacro admin-let
-  [[name zk] & body]
-  `(let [admin# (~connect-admin ~zk)
-         ~name admin#]
-     (try (doall ~@body) (finally (.close admin#)))))
-
-(defn byte-buffer->str
-  [buf]
-  (Bytes/toStringBinary buf))
-
-(defn server-load->map
+(defn- server-load->map
+  "Transforms ServerLoad object into clojure map"
   [load]
   {:max-heap-mb        (.getMaxHeapMB load)
    :used-heap-mb       (.getUsedHeapMB load)
@@ -36,11 +15,10 @@
    :store-files        (.getStorefiles load)
    :store-file-size-mb (.getStorefileSizeInMB load)})
 
-(defn collect-server-info
+(defn- collect-server-info
   "Collects server statistics"
-  [admin]
-  (let [cluster-status (.getClusterStatus admin)
-        server-names (.getServers cluster-status)
+  [cluster-status]
+  (let [server-names (.getServers cluster-status)
         server-loads (map #(.getLoad cluster-status %) server-names)]
     (into
       {}
@@ -51,6 +29,35 @@
            (zipmap server-names server-loads)))))
 
 (def collect-region-info hbase-impl/collect-region-info)
-(def region-map hbase-impl/region-map)
+
+(defn collect-info
+  "Collects server and region statistics"
+  [admin]
+  (let [cluster-status (.getClusterStatus admin)]
+    {:servers (doall (collect-server-info cluster-status))
+     :regions (doall (collect-region-info admin cluster-status))}))
+
 (def bytes-comp Bytes/BYTES_COMPARATOR)
 
+(defn byte-buffer->str
+  "Returns the string representation of a bytes array"
+  [buf]
+  (Bytes/toStringBinary buf))
+
+;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
+(defn- connect-admin [zk]
+  (let [[quorum port] (str/split zk #"/")
+        port (or port 2181)]
+    (HBaseAdmin.
+      (doto (HBaseConfiguration/create)
+        (.set "hbase.zookeeper.quorum" quorum)
+        (.setInt "hbase.zookeeper.property.clientPort" port)
+        (.setInt "hbase.client.retries.number" 1)
+        (.setInt "hbase.regions.slop" 0)
+        (.setInt "zookeeper.recovery.retry" 1)))))
+
+(defmacro admin-let
+  [[name zk] & body]
+  `(let [admin# (~connect-admin ~zk)
+         ~name admin#]
+     (try (doall ~@body) (finally (.close admin#)))))

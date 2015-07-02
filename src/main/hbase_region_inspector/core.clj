@@ -102,8 +102,7 @@
   [zk]
   (hbase/admin-let
     [admin zk]
-    [(doall (hbase/collect-region-info admin))
-     (doall (hbase/collect-server-info admin))]))
+    (hbase/collect-info admin)))
 
 (defn region-location?
   "Finds the host region server of the region"
@@ -167,12 +166,13 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [regions metric]
-  (let [metric (or metric :store-file-size-mb)
-        ;; Exclude hbase:meta table
+  [regions metric sort]
+  (let [;; Exclude hbase:meta table
         all-regions (filter (complement :meta?) (:regions @cached))
         ;; Sort the regions
-        sorted-regions (sort-by :start-key hbase/bytes-comp all-regions)
+        sorted-regions (if (= sort :metric)
+                         (reverse (sort-by metric all-regions))
+                         (sort-by :start-key hbase/bytes-comp all-regions))
         ;; ByteBuffer -> strings
         visible-regions (map byte-buffers->str sorted-regions)
         ;; Group regions by table name
@@ -183,10 +183,12 @@
                             [table (reduce #(+ %1 (metric %2)) 0 regions)]))
         ;; List of maps with table-level sums
         list-with-sum (map #(assoc (zipmap [:name :regions] %)
-                                   :sum (last (format-val metric (grouped-sum (first %)))))
+                                   :sum (grouped-sum (first %)))
                            grouped)
         ;; Sort the list by table name
-        sorted (sort-by :name list-with-sum)]
+        sorted (sort-by :name list-with-sum)
+        ;; Sorted with human-readable sum
+        sorted (map #(assoc % :sumh (last (format-val metric (:sum %)))) sorted)]
     sorted))
 
 (defn update-regions!
@@ -195,7 +197,8 @@
   (util/info "Updating regions")
   (let [old-regions (into {} (for [region (:regions @cached)]
                                [(:name region) region]))
-        [new-regions servers] (collect-info @zookeeper)
+        {new-regions :regions
+         servers     :servers} (collect-info @zookeeper)
         prev-time (:updated-at @cached)
         now (System/currentTimeMillis)
         interval (- now (or prev-time now))
@@ -254,10 +257,12 @@
          (response
            (regions-by-servers (:regions @cached)
                                (keyword metric) (keyword sort) tables))))
-  (GET "/table_regions.json" {{metric :metric} :params}
+  (GET "/table_regions.json"
+       {{:keys [sort metric]
+         :or {sort "metric" metric "store-file-size-mb"}} :params}
        (response
          (regions-by-tables (:regions @cached)
-                            (keyword metric))))
+                            (keyword metric) (keyword sort))))
   (PUT "/move_region" {{:keys [src dest region]} :params}
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))

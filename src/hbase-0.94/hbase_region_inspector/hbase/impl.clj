@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.hbase.impl
-  (:require [clojure.set :as set])
+  (:require [clojure.set :as set]
+            [hbase-region-inspector.hbase.base :as base])
   (:import org.apache.hadoop.hbase.client.HConnectionManager
            org.apache.hadoop.hbase.client.HTable
            org.apache.hadoop.hbase.util.Bytes
@@ -10,75 +11,50 @@
 (defn info->map
   "Builds map from HRegionInfo"
   [info]
-  {:encoded-name (.getEncodedName info)
-   :table        (Bytes/toString (.getTableName info))
-   :start-key    (.getStartKey info)
-   :end-key      (.getEndKey info)
-   :meta?        (.isMetaRegion info)})
+  (assoc (base/info->map info)
+         :table (Bytes/toString (.getTableName info))))
 
 (defn load->map
   "Builds map from RegionLoad"
   [load]
-  {:compacted-kvs              (.getCurrentCompactedKVs load)
-   :memstore-size-mb           (.getMemStoreSizeMB load)
-   :read-requests              (.getReadRequestsCount load)
-   :requests                   (.getRequestsCount load)
-   :root-index-size-kb         (.getRootIndexSizeKB load)
-   :store-file-index-size-mb   (.getStorefileIndexSizeMB load)
-   :store-files                (.getStorefiles load)
-   :store-file-size-mb         (.getStorefileSizeMB load)
-   :stores                     (.getStores load)
-   :store-uncompressed-size-mb (->> load
-                                    str
-                                    (re-find #"storefileUncompressedSizeMB=([0-9]+)")
-                                    last
-                                    Integer/parseInt)
-   :total-compacting-kvs       (.getTotalCompactingKVs load)
-   :bloom-size-kb              (.getTotalStaticBloomSizeKB load)
-   :total-index-size-kb        (.getTotalStaticIndexSizeKB load)
-   :write-requests             (.getWriteRequestsCount load)})
-
-(defmacro connection-let
-  [[name admin] & body]
-  `(let [conn# (HConnectionManager/createConnection (.getConfiguration ~admin))
-         ~name conn#]
-    (try
-      (doall ~@body)
-      (finally (.close conn#)))))
+  (assoc (base/load->map load)
+         :store-uncompressed-size-mb
+         (->> load
+              str
+              (re-find #"storefileUncompressedSizeMB=([0-9]+)")
+              last
+              Integer/parseInt)))
 
 ;; Get HRegionInfo from HBaseAdmin
 (defn- region-locations
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
   [admin]
-  (connection-let
-    [conn admin]
-    (let [table-descs (.listTables admin)
-          table-names (map #(.getName %) table-descs)
-          ;; HTables for all tables
-          htables (map #(cast HTable (.getTable conn %)) table-names)]
-      ;; Map of region info => server location
-      (reduce #(merge %1 (.getRegionLocations %2)) {} htables))))
+  (let [conn (HConnectionManager/createConnection (.getConfiguration admin))]
+    (try
+      (let [table-descs (.listTables admin)
+            table-names (map #(.getName %) table-descs)
+            ;; HTables for all tables
+            htables (map #(cast HTable (.getTable conn %)) table-names)]
+        ;; Map of region info => server location
+        (reduce #(merge %1 (.getRegionLocations %2)) {} htables))
+      (finally (.close conn)))))
 
 ;; Get HRegionInfo from HBaseAdmin
 (defn- online-regions
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
   [admin]
-  (let [locations (region-locations admin)
+  (let [info->server (region-locations admin)
         ;; Reverse key-value pairs and group by servers
-        locations (reduce #(update-in %1 [(first %2)] conj (last %2))
-                          {}
-                          (for [[region-info server-name] locations]
-                            [(.getServerName server-name) region-info]))
-        ;; Server -> region name -> region info
-        locations (for [[server-name region-infos] locations]
-                    [server-name
-                     (reduce #(apply assoc %1 %2)
-                             {}
-                             (map (fn [region-info]
-                                    [(ByteBuffer/wrap (.getRegionName region-info))
-                                     (info->map region-info)])
-                                  region-infos))])]
-    (into {} locations)))
+        server->infos (reduce #(update-in %1 [(first %2)] conj (last %2))
+                              {}
+                              (for [[info server] info->server]
+                                [(.getServerName server) info]))]
+    ;; Server -> region name -> region info
+    (into {} (for [[server-name region-infos] server->infos]
+               [server-name
+                (into {} (for [info region-infos]
+                           [(ByteBuffer/wrap (.getRegionName info))
+                            (info->map info)]))]))))
 
 
 ;; Get RegionLoad from ClusterStatus
@@ -95,9 +71,8 @@
 
 (defn collect-region-info
   "Returns the region information as a list of maps"
-  [admin]
-  (let [cluster-status (.getClusterStatus admin)
-        server->regions (future (online-regions admin))
+  [admin cluster-status]
+  (let [server->regions (future (online-regions admin))
         aggregate-fn (fn [server-name]
                        (let [name-str (.getServerName server-name)
                              base-map {:server name-str}
@@ -113,17 +88,6 @@
                            (select-keys @from-load common-keys))))
         server-names (.getServers cluster-status)
         aggregated (map aggregate-fn server-names)]
-    (for [server-regions aggregated
-          [k v] server-regions]
+    (for [region->info aggregated
+          [k v] region->info]
       (assoc v :name (Bytes/toStringBinary (.array k))))))
-
-(defn region-map
-  "Returns a map that associates encoded region name with the name of the
-  server that holds the regions"
-  [admin]
-  (let [loc-region (region-locations admin)
-        loc-encoded (for [[info server-name] loc-region]
-                      [(.getEncodedName info)
-                       (.getServerName server-name)])]
-    (into {} loc-encoded)))
-
