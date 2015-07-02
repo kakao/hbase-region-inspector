@@ -40,7 +40,11 @@
 
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
-  {:0.94-test {:dependencies [[org.apache.hbase/hbase-testing-util "0.94.15-cdh4.7.1"]]}
+  {:0.94-test {:dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1" :classifier "tests"]
+                              ;; DistributedFileSystem
+                              [org.apache.hadoop/hadoop-hdfs "2.0.0-cdh4.7.1"]
+                              ;; MiniDFSCluster
+                              [org.apache.hadoop/hadoop-minicluster "2.0.0-cdh4.7.1"]]}
    :0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
                   :uberjar-name ~(:0.94 jars)
                   :source-paths ["src/hbase-0.94"]
