@@ -127,3 +127,7 @@ tr.condensed .metric-value {
   -o-transition:      none;
   transition:         none;
 }
+
+a.refresh_msg {
+  cursor: pointer !important;
+}

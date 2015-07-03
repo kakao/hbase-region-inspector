@@ -9,6 +9,7 @@ var refresh = {
   resume: function() {
     this.paused = false;
   },
+  job: null,
   timeout: null
 };
 
@@ -25,6 +26,7 @@ function colorFor(table) {
 }
 
 function schedule(job) {
+  refresh.job = job;
   var tick = function() {
     if (refresh.ticks == refresh.interval) {
       refresh.ticks = 0;
@@ -41,6 +43,11 @@ function schedule(job) {
     }
   }
   tick();
+}
+
+function fire() {
+  refresh.ticks = 0;
+  refresh.job();
 }
 
 function fmt(val) {
@@ -466,7 +473,7 @@ var MetricsTab = React.createClass({
                 );
             }, this)}
             <li className="pull-right disabled">
-              <a className="refresh_msg" href="javascript:void(0)">
+              <a className="refresh_msg" href="javascript:void(0)" onClick={fire}>
               </a>
             </li>
           </ul>
