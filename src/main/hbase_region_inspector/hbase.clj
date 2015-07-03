@@ -28,7 +28,11 @@
                 (assoc (server-load->map load) :name name)]))
            (zipmap server-names server-loads)))))
 
-(def collect-region-info hbase-impl/collect-region-info)
+(defn collect-region-info
+  ([admin]
+   (hbase-impl/collect-region-info admin (.getClusterStatus admin)))
+  ([admin cluster-status]
+   (hbase-impl/collect-region-info admin cluster-status)))
 
 (defn collect-info
   "Collects server and region statistics"
