@@ -62,7 +62,7 @@ function debug() {
 }
 
 function disablePopover() {
-  [".extra-info", ".extra-info-right"].map(function(klass) {
+  [".extra-info", ".extra-info-right", ".extra-info-bottom"].map(function(klass) {
     $(klass).popover('disable')
   });
 }
@@ -79,6 +79,7 @@ function enablePopover() {
   }
   enable(".extra-info", "top");
   enable(".extra-info-right", "right");
+  enable(".extra-info-bottom", "bottom");
 }
 
 function startDrag() {
@@ -441,8 +442,8 @@ var RegionByServer = React.createClass({
             </tr>
           </thead>
           <tbody>
-          {servers.map(function(server) {
-            return <RegionByServer.Row key={server.name} metric={this.props.metric} {...this.state} parent={this} callback={this.setTable} {...server} />
+          {servers.map(function(server, idx) {
+            return <RegionByServer.Row key={server.name} index={idx} metric={this.props.metric} {...this.state} parent={this} callback={this.setTable} {...server} />
           }, this)}
           </tbody>
         </table>
@@ -491,6 +492,7 @@ RegionByServer.Row = React.createClass({
     var url = "http://" + this.props.name.replace(/,.*/, '') + ":60030";
     var localSum = this.props.sum;
     var condensed = this.props.condensed ? " condensed" : ""
+    var klass = "progress-bar draggable extra-info" + (this.props.index > 2 ? "" : "-bottom")
 
     return (
       <tr className={condensed}>
@@ -505,7 +507,7 @@ RegionByServer.Row = React.createClass({
               var width = (this.props.max == 0 || localSum == 0) ? 0 :
                 100 * r[metric] / this.props.max;
               return width <= 0 ? "" : (
-                <div className="progress-bar extra-info draggable"
+                <div className={klass}
                      data-region={r['encoded-name']}
                      key={r['encoded-name']}
                      style={{width: width + '%',
@@ -661,7 +663,7 @@ RegionByTable.TableRow = React.createClass({
             {this.props.regions.map(function(r) {
               var width = (this.props.max == 0) ? 0 :
                 100 * r[this.props.metric] / this.props.max;
-              var klass = "progress-bar extra-info" + (this.props.index > 2 ? "" : "-right")
+              var klass = "progress-bar extra-info" + (this.props.index > 2 ? "" : "-bottom")
               return width == 0 ? "" : (
                 <div className={klass}
                      key={r['encoded-name']}
@@ -689,7 +691,7 @@ RegionByTable.Regions = React.createClass({
       return curr[metric] > cmax ? curr[metric] : cmax;
     }, 0);
     return (
-      <div className="row">
+      <div className="row table-regions">
         <div className="col-xs-12">
           <h4>{this.props.name} <small>{this.props.sum}</small></h4>
           <table className="table table-condensed barchart">
