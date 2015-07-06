@@ -1,6 +1,5 @@
 (ns hbase-region-inspector.core
-  (:require [clojure.pprint :refer [pprint]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
@@ -123,9 +122,9 @@
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
-  [regions metric sort tables]
-  (let [all-regions (remove :meta? (:regions @cached))
-        servers (:servers @cached)
+  [regions servers metric sort tables]
+  (let [;; Exclude meta regions
+        all-regions (remove :meta? regions)
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
@@ -168,7 +167,7 @@
   "Generates output for /table_regions.json. Regions grouped by their tables."
   [regions metric sort]
   (let [;; Exclude hbase:meta table
-        all-regions (filter (complement :meta?) (:regions @cached))
+        all-regions (filter (complement :meta?) regions)
         ;; Sort the regions
         sorted-regions (if (= sort :metric)
                          (reverse (sort-by metric all-regions))
@@ -255,7 +254,7 @@
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
-           (regions-by-servers (:regions @cached)
+           (regions-by-servers (:regions @cached) (:servers @cached)
                                (keyword metric) (keyword sort) tables))))
   (GET "/table_regions.json"
        {{:keys [sort metric]
