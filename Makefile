@@ -24,7 +24,7 @@ repl:
 watch:
 	-killall -9 jsx
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
-	lein with-profile $(profile),$(profile)-test ring server-headless
+	DEBUG=1 lein with-profile $(profile),$(profile)-test ring server-headless
 
 test:
 	lein with-profile $(profile),$(profile)-test test

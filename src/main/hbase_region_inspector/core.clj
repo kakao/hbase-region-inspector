@@ -193,11 +193,12 @@
 (defn update-regions!
   "Collects region info from HBase and store it in @cached"
   []
-  (util/info "Updating regions")
+  (util/debug "Updating regions")
   (let [old-regions (into {} (for [region (:regions @cached)]
                                [(:name region) region]))
         {new-regions :regions
-         servers     :servers} (collect-info @zookeeper)
+         servers     :servers} (util/elapsed-time "collect-info"
+                                                  (collect-info @zookeeper))
         prev-time (:updated-at @cached)
         now (System/currentTimeMillis)
         interval (- now (or prev-time now))

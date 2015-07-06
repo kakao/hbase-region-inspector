@@ -38,4 +38,17 @@
 (defn- log [type message]
   (println (format "%s: %s: %s" (java.util.Date.) type message)))
 (defn info [message] (log "INFO" message))
+(if (System/getenv "DEBUG")
+  (defn debug [message] (log "DEBUG" message))
+  (defn debug [&]))
 (defn error [message] (log "ERROR" message))
+
+(defmacro elapsed-time
+  [name & body]
+  `(let [started-at# (System/currentTimeMillis)]
+     (try
+       ~@body
+       (finally
+         (~debug (format "%s (Elapsed: %dms)"
+                         ~name
+                         (- (System/currentTimeMillis) started-at#)))))))
