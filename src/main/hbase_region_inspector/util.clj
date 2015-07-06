@@ -38,9 +38,9 @@
 (defn- log [type message]
   (println (format "%s: %s: %s" (java.util.Date.) type message)))
 (defn info [message] (log "INFO" message))
-(if (System/getenv "DEBUG")
-  (defn debug [message] (log "DEBUG" message))
-  (defn debug [&]))
+(defn debug [message]
+  (if (System/getenv "DEBUG")
+    (log "DEBUG" message)))
 (defn error [message] (log "ERROR" message))
 
 (defmacro elapsed-time
