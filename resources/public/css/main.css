@@ -66,6 +66,10 @@ tr.condensed * {
   font-size: 8px;
 }
 
+tr.condensed div.mono-space {
+  margin-top: -4px;
+}
+
 .label-table {
   display: inline-block;
   margin-bottom: 5px;
