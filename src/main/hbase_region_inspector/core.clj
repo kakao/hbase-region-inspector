@@ -129,7 +129,7 @@
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
-                           #(reduce - (map metric (last %)))
+                           #(reduce - 0 (map metric (last %)))
                            (group-by :table all-regions)))
 
         ;; Tables to show
