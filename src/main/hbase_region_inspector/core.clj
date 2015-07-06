@@ -209,14 +209,14 @@
                           new-val (metric region)
                           old-val (or (get-in old-regions [name metric]) new-val)]
                       (/ (- new-val old-val) interval 0.001))))
-        new-regions (map #(assoc
-                            %
-                            :requests-rate (diff-fn % :requests)
-                            :write-requests-rate (diff-fn % :write-requests)
-                            :read-requests-rate (diff-fn % :read-requests)
-                            :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
-                         new-regions)
-        new-regions (map #(assoc % :html (build-region-popover %)) new-regions)
+        new-regions (pmap #(assoc
+                             %
+                             :requests-rate (diff-fn % :requests)
+                             :write-requests-rate (diff-fn % :write-requests)
+                             :read-requests-rate (diff-fn % :read-requests)
+                             :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
+                          new-regions)
+        new-regions (pmap #(assoc % :html (build-region-popover %)) new-regions)
         servers (into {} (for [[k v] servers]
                            [k (assoc v :html (build-server-popover v))]))]
     (reset! cached {:updated-at now

@@ -33,10 +33,13 @@
     (try
       (let [table-descs (.listTables admin)
             table-names (map #(.getName %) table-descs)
-            ;; HTables for all tables
-            htables (map #(cast HTable (.getTable conn %)) table-names)]
-        ;; Map of region info => server location
-        (reduce #(merge %1 (.getRegionLocations %2)) {} htables))
+            ;; Region location maps (<HRegionInfo,ServerName>)
+            loc-futures (doall ; To start futures right away
+                          (map #(future
+                                  (.getRegionLocations
+                                    (cast HTable (.getTable conn %))))
+                               table-names))]
+        (reduce merge {} (map deref loc-futures)))
       (finally (.close conn)))))
 
 ;; Get HRegionInfo from HBaseAdmin

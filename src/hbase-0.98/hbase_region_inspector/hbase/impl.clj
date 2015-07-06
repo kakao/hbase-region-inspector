@@ -57,8 +57,8 @@
   "Returns the region information as a list of maps"
   [admin cluster-status]
   (let [server-names (.getServers cluster-status)
-        aggregated (map (partial aggregate-two-sources cluster-status admin)
-                        server-names)]
+        aggregated (pmap (partial aggregate-two-sources cluster-status admin)
+                         server-names)]
     (for [region->info aggregated
           [k v] region->info]
       (assoc v :name (Bytes/toStringBinary (.array k))))))
