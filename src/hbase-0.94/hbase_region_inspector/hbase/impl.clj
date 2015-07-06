@@ -45,7 +45,7 @@
   [admin]
   (let [info->server (region-locations admin)
         ;; Reverse key-value pairs and group by servers
-        server->infos (reduce #(update-in %1 [(first %2)] conj (last %2))
+        server->infos (reduce #(update %1 (first %2) conj (last %2))
                               {}
                               (for [[info server] info->server]
                                 [(.getServerName server) info]))]

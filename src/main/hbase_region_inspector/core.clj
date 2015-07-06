@@ -149,7 +149,7 @@
                   (fn [regions] (sort-by score-fn regions))
                   (fn [regions] (sort-by (comp vec reverse score-fn) regions)))
         ;; Sort the regions in each server
-        grouped (map #(update-in % [:regions] sort-fn) grouped)
+        grouped (map #(update % :regions sort-fn) grouped)
         ;; Find the local sum of the metric of each region
         grouped (map #(assoc % :sum (reduce + (map metric (:regions %))))
                      grouped)

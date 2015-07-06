@@ -11,7 +11,7 @@
   :license {:name "MIT"}
   :repositories [["cloudera-releases"
                   "https://repository.cloudera.com/artifactory/cloudera-repos"]]
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [ring/ring-core "1.4.0-RC1"]
                  [ring/ring-devel "1.4.0-RC1"]
                  [ring/ring-jetty-adapter "1.4.0-RC1"]
