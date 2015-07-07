@@ -18,6 +18,9 @@
 ;;; Whether we should allow region relocation or not
 (defonce read-only? (atom false))
 
+;;; Whether we should include meta region or not
+(defonce with-meta? (atom false))
+
 ;;; Cache the result of previous inspection
 (defonce cached (atom {:updated-at nil :regions []}))
 
@@ -122,9 +125,9 @@
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
-  [regions servers metric sort tables]
+  [regions servers metric sort tables {:keys [with-meta?] :or {with-meta? false}}]
   (let [;; Exclude meta regions
-        all-regions (remove :meta? regions)
+        all-regions (if with-meta? regions (remove :meta? regions))
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
@@ -165,9 +168,9 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [regions metric sort]
+  [regions metric sort {:keys [with-meta?] :or {with-meta? false}}]
   (let [;; Exclude hbase:meta table
-        all-regions (filter (complement :meta?) regions)
+        all-regions (if with-meta? regions (remove :meta? regions))
         ;; Sort the regions
         sorted-regions (if (= sort :metric)
                          (reverse (sort-by metric all-regions))
@@ -255,13 +258,15 @@
              tables (if (instance? String tables) [tables] tables)]
          (response
            (regions-by-servers (:regions @cached) (:servers @cached)
-                               (keyword metric) (keyword sort) tables))))
+                               (keyword metric) (keyword sort) tables
+                               {:with-meta? @with-meta?}))))
   (GET "/table_regions.json"
        {{:keys [sort metric]
          :or {sort "metric" metric "store-file-size-mb"}} :params}
        (response
          (regions-by-tables (:regions @cached)
-                            (keyword metric) (keyword sort))))
+                            (keyword metric) (keyword sort)
+                            {:with-meta? @with-meta?})))
   (PUT "/move_region" {{:keys [src dest region]} :params}
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))
@@ -316,13 +321,14 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: hbase-region-inspector [--read-only] QUORUM[/ZKPORT] PORT")
+  (println "usage: hbase-region-inspector [--read-only --with-meta] QUORUM[/ZKPORT] PORT")
   (System/exit 1))
 
 (defn -main [& args]
   (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
     (reset! read-only? (contains? opts :read-only))
+    (reset! with-meta? (contains? opts :with-meta))
     (when (not= 2 (count args)) (exit "invalid number of arguments"))
     (try
       (let [[zk port] args
