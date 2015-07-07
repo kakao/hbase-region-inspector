@@ -63,7 +63,7 @@ function debug() {
 
 function disablePopover() {
   [".extra-info", ".extra-info-right", ".extra-info-bottom"].map(function(klass) {
-    $(klass).popover('disable')
+    $(klass).popover('disable');
   });
 }
 
@@ -75,7 +75,7 @@ function enablePopover() {
       placement: pos,
       container: "body"
     });
-    $(klass).popover('enable')
+    $(klass).popover('enable');
   }
   enable(".extra-info", "top");
   enable(".extra-info-right", "right");
