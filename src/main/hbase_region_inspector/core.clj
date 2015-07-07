@@ -151,7 +151,7 @@
         ;; Sort the regions in each server
         grouped (map #(update % :regions sort-fn) grouped)
         ;; Find the local sum of the metric of each region
-        grouped (map #(assoc % :sum (reduce + (map metric (:regions %))))
+        grouped (map #(assoc % :sum (reduce + (filter pos? (map metric (:regions %)))))
                      grouped)
         ;; Find the max of the sums
         group-max (if (not-empty grouped)
