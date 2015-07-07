@@ -56,15 +56,15 @@
    {:server "gamma" :table "baz" :start-key (.getBytes "i") :val1 6 :val2 12}])
 
 (deftest test-regions-by-servers
-  (let [abg (fn [& args]
+  (let [abg (fn [args]
               (let [{servers :servers :as result}
-                    (apply regions-by-servers regions servers args)
+                    (regions-by-servers (merge {:regions regions :servers servers} args))
                     {:strs [alpha beta gamma]}
                     (into {} (for [server servers] [(:name server) server]))]
                 (merge result {:alpha alpha :beta beta :gamma gamma
                                :checker (juxt :max :sum)})))]
     (testing "all tables"
-      (let [{:keys [tables alpha beta gamma checker]} (abg :val1 :metric [])]
+      (let [{:keys [tables alpha beta gamma checker]} (abg {:metric :val1 :sort :metric})]
         (is (= #{"foo" "bar" "baz"} (set tables)))
         (is (= [22 6] (checker alpha)))
         (is (= [22 14] (checker beta)))
@@ -73,7 +73,7 @@
         (is (= [8 7 6 5] (map :val2 (:regions beta))))
         (is (= [12 11 9 10] (map :val2 (:regions gamma))))))
     (testing "subset of tables"
-      (let [{:keys [tables alpha beta gamma checker]} (abg :val1 :metric ["foo" "baz"])]
+      (let [{:keys [tables alpha beta gamma checker]} (abg {:metric :val1 :sort :metric :tables ["foo" "baz"]})]
         (is (= #{"foo" "bar" "baz"} (set tables)))
         (is (= [16 5] (checker alpha)))
         (is (= [16 7] (checker beta)))
@@ -82,7 +82,7 @@
         (is (= [7 6] (map :val2 (:regions beta))))
         (is (= [12 9 10] (map :val2 (:regions gamma))))))
     (testing "sort by table sum"
-      (let [{:keys [tables alpha beta gamma checker]} (abg :val1 :table [])]
+      (let [{:keys [tables alpha beta gamma checker]} (abg {:metric :val1 :sort :table :tables []})]
         (is (= #{"foo" "bar" "baz"} (set tables)))
         (is (= [3 2 4 1] (map :val2 (:regions alpha))))
         (is (= [6 8 5 7] (map :val2 (:regions beta))))
@@ -90,7 +90,7 @@
 
 (deftest test-regions-by-tables
   (testing "sort by metric"
-    (let [result (regions-by-tables regions :val1 :metric)
+    (let [result (regions-by-tables {:regions regions :metric :val1 :sort :metric})
           [bar baz foo] result
           [bar-regions baz-regions foo-regions] (map :regions result)]
       ;; Tables are sorted by their names
@@ -102,7 +102,7 @@
       (is (= [11 8 5 2] (map :val2 bar-regions)))
       (is (= [12 9 6 3] (map :val2 baz-regions)))))
   (testing "sort by start-key"
-    (let [result (regions-by-tables regions :val1 :start-key)
+    (let [result (regions-by-tables {:regions regions :metric :val1 :sort :start-key})
           [bar baz foo] result
           [bar-regions baz-regions foo-regions] (map :regions result)]
       ;; Tables are, again, sorted by their names
