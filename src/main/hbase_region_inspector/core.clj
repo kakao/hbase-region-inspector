@@ -239,7 +239,6 @@
 (defroutes app-routes
   (GET "/" []
        (render-file "public/index.html" {:zookeeper @zookeeper
-                                         :read-only @read-only?
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))
