@@ -239,7 +239,7 @@ var App = React.createClass({
     enablePopover();
   },
   changeMenu: function(menu) {
-    refreshApp(menu, {sort: menu == "rg" ? "start-key" : "metric"});
+    refreshApp(menu, {sort: menu == "rg" ? "start-key" : "metric", tables: _tables});
   },
   render: function() {
     debug(this.props.menu);
@@ -318,9 +318,11 @@ var tableSelectable = {
     if (visible) {
       tables.push(val);
     }
+    _tables = tables;
     this.refresh({ tables: tables });
   },
   clearTable: function() {
+    _tables = [];
     this.refresh({ tables: [] });
   }
 };
@@ -364,6 +366,7 @@ var RegionByServer = React.createClass(_.extend({
     this.setState({condensed: val});
   },
   setTable: function(val) {
+    _tables = [val];
     this.refresh({ tables: [val] });
   },
   refresh: function(opts, nofade) {
