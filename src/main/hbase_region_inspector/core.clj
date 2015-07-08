@@ -56,7 +56,8 @@
       :compaction               ["Compaction" (apply format "%d / %d" val)]
       :used-heap-mb             ["Used heap" (str val " MB")]
       :max-heap-mb              ["Max heap" (str val " MB")]
-      [(util/keyword->str (str type)) val])))
+      [(util/keyword->str (str type))
+       (if (instance? Number val) (rate val) val)])))
 
 (defn build-region-popover
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
