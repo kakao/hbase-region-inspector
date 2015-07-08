@@ -169,13 +169,24 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [{:keys [regions metric sort with-meta?] :or {with-meta? false}}]
+  [{:keys [regions metric sort tables with-meta?]
+    :or   {tables nil with-meta? false}}]
   (let [;; Exclude hbase:meta table
         all-regions (if with-meta? regions (remove :meta? regions))
+
+        ;; Sort the tables in their names
+        all-tables (->> all-regions (map :table) (apply sorted-set) vec)
+
+        ;; Regions to show
+        visible-regions (if (seq tables)
+                          (let [table-set (set tables)]
+                            (filter #(table-set (:table %)) all-regions))
+                          all-regions)
+
         ;; Sort the regions
         sorted-regions (if (= sort :metric)
-                         (reverse (sort-by metric all-regions))
-                         (sort-by :start-key hbase/bytes-comp all-regions))
+                         (reverse (sort-by metric visible-regions))
+                         (sort-by :start-key hbase/bytes-comp visible-regions))
         ;; ByteBuffer -> strings
         visible-regions (map byte-buffers->str sorted-regions)
         ;; Group regions by table name
@@ -192,7 +203,8 @@
         sorted (sort-by :name list-with-sum)
         ;; Sorted with human-readable sum
         sorted (map #(assoc % :sumh (last (format-val metric (:sum %)))) sorted)]
-    sorted))
+    {:all-tables all-tables
+     :tables     sorted}))
 
 (defn update-regions!
   "Collects region info from HBase and store it in @cached"
@@ -265,12 +277,16 @@
                                        :with-meta? @with-meta?})))))
   (GET "/table_regions.json"
        {{:keys [sort metric]
-         :or {sort "metric" metric "store-file-size-mb"}} :params}
-       (response
-         (regions-by-tables {:regions    (:regions @cached)
-                             :metric     (keyword metric)
-                             :sort       (keyword sort)
-                             :with-meta? @with-meta?})))
+         :or {sort "metric" metric "store-file-size-mb"}
+         :as params} :params}
+       (let [tables (get params "tables[]" [])
+             tables (if (instance? String tables) [tables] tables)]
+         (response
+           (regions-by-tables {:regions    (:regions @cached)
+                               :metric     (keyword metric)
+                               :sort       (keyword sort)
+                               :tables     tables
+                               :with-meta? @with-meta?}))))
   (PUT "/move_region" {{:keys [src dest region]} :params}
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))

@@ -90,7 +90,7 @@
 
 (deftest test-regions-by-tables
   (testing "sort by metric"
-    (let [result (regions-by-tables {:regions regions :metric :val1 :sort :metric})
+    (let [{result :tables} (regions-by-tables {:regions regions :metric :val1 :sort :metric})
           [bar baz foo] result
           [bar-regions baz-regions foo-regions] (map :regions result)]
       ;; Tables are sorted by their names
@@ -101,8 +101,19 @@
       (is (= [10 7 4 1] (map :val2 foo-regions)))
       (is (= [11 8 5 2] (map :val2 bar-regions)))
       (is (= [12 9 6 3] (map :val2 baz-regions)))))
+  (testing "sort by metric - subset of tables"
+    (let [{:keys [tables all-tables]} (regions-by-tables {:regions regions :metric :val1 :sort :metric :tables ["foo" "baz"]})
+          [baz foo] tables
+          [baz-regions foo-regions] (map :regions tables)]
+      ;; Tables are sorted by their names
+      (is (= ["bar" "baz" "foo"] all-tables))
+      (is (= ["baz" "foo"] (map :name tables)))
+      (is (= 12 (:sum foo)))
+      (is (= 16 (:sum baz)))
+      (is (= [10 7 4 1] (map :val2 foo-regions)))
+      (is (= [12 9 6 3] (map :val2 baz-regions)))))
   (testing "sort by start-key"
-    (let [result (regions-by-tables {:regions regions :metric :val1 :sort :start-key})
+    (let [{result :tables} (regions-by-tables {:regions regions :metric :val1 :sort :start-key})
           [bar baz foo] result
           [bar-regions baz-regions foo-regions] (map :regions result)]
       ;; Tables are, again, sorted by their names

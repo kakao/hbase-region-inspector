@@ -312,7 +312,20 @@ var App = React.createClass({
   }
 });
 
-var RegionByServer = React.createClass({
+var tableSelectable = {
+  toggleTable: function(val, visible) {
+    var tables = _.without(this.props.tables, val);
+    if (visible) {
+      tables.push(val);
+    }
+    this.refresh({ tables: tables });
+  },
+  clearTable: function() {
+    this.refresh({ tables: [] });
+  }
+};
+
+var RegionByServer = React.createClass(_.extend({
   getDefaultProps: function() {
     return {
       tables: [],
@@ -353,16 +366,6 @@ var RegionByServer = React.createClass({
   setTable: function(val) {
     this.refresh({ tables: [val] });
   },
-  toggleTable: function(val, visible) {
-    var tables = _.without(this.props.tables, val)
-    if (visible) {
-      tables.push(val)
-    }
-    this.refresh({ tables: tables });
-  },
-  clearTable: function() {
-    this.refresh({ tables: [] });
-  },
   refresh: function(opts, nofade) {
     if (!nofade) $("table").fadeTo(100, 0.5);
     refreshApp("rs", _.extend(_.omit(this.props, "result"), opts))
@@ -374,7 +377,6 @@ var RegionByServer = React.createClass({
     debug(this.props);
     var servers = this.props.result.servers;
     var error = this.props.result.error;
-    var tables = this.props.result.tables;
     var sum = servers.reduce(function(sum, server) { return sum + server.sum }, 0);
     return (
       <div>
@@ -404,27 +406,7 @@ var RegionByServer = React.createClass({
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="control-label col-xs-1">Tables</label>
-            <div className="col-xs-11">
-              <h5>
-                {tables.map(function(name) {
-                  var allVisible = this.props.tables.length == 0;
-                  var visible = (allVisible || this.props.tables.indexOf(name) >= 0);
-                  var bg = visible ? colorFor(name)[0] : "silver";
-                  return (
-                    <span key={name}
-                          style={{backgroundColor: bg}}
-                          onClick={this.toggleTable.bind(this, name, allVisible ? true : !visible)}
-                          className="label label-info label-table">{name}</span>
-                  )
-                }, this)}
-                <button type="button" className={"btn btn-default btn-xs" + (this.props.tables.length == 0 ? " hide" : "")} onClick={this.clearTable}>
-                  <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                </button>
-              </h5>
-            </div>
-          </div>
+          <TableButtons allTables={this.props.result.tables} tables={this.props.tables} parent={this}/>
         </form>
 
         {servers.length > 0 ? "" :
@@ -450,7 +432,7 @@ var RegionByServer = React.createClass({
       </div>
     )
   }
-});
+}, tableSelectable));
 
 var MetricsTab = React.createClass({
   render: function() {
@@ -478,6 +460,35 @@ var MetricsTab = React.createClass({
               </a>
             </li>
           </ul>
+        </div>
+      </div>
+    );
+  }
+});
+
+var TableButtons = React.createClass({
+  render: function() {
+    var p = this.props.parent;
+    return (
+      <div className="form-group">
+        <label className="control-label col-xs-1">Tables</label>
+        <div className="col-xs-11">
+          <h5>
+            {this.props.allTables.map(function(name) {
+              var allVisible = this.props.tables.length == 0;
+              var visible = (allVisible || this.props.tables.indexOf(name) >= 0);
+              var bg = visible ? colorFor(name)[0] : "silver";
+              return (
+                <span key={name}
+                      style={{backgroundColor: bg}}
+                      onClick={p.toggleTable.bind(p, name, allVisible ? true : !visible)}
+                      className="label label-info label-table">{name}</span>
+              )
+            }, this)}
+            <button type="button" className={"btn btn-default btn-xs" + (this.props.tables.length == 0 ? " hide" : "")} onClick={p.clearTable}>
+              <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            </button>
+          </h5>
         </div>
       </div>
     );
@@ -530,7 +541,7 @@ RegionByServer.Row = React.createClass({
   }
 });
 
-var RegionByTable = React.createClass({
+var RegionByTable = React.createClass(_.extend({
   getInitialState: function() {
     return {
       condensed: _condensed
@@ -538,6 +549,7 @@ var RegionByTable = React.createClass({
   },
   getDefaultProps: function() {
     return {
+      tables: [],
       metric: "store-file-size-mb",
       sort:   "metric",
       menu:   "tb"
@@ -574,6 +586,8 @@ var RegionByTable = React.createClass({
     if (this.props.result == null) {
       return <div id="spinner"/>;
     }
+    var allTables = this.props.result['all-tables'];
+    var tables = this.props.result.tables;
     return (
       <div>
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
@@ -601,20 +615,22 @@ var RegionByTable = React.createClass({
               </label>
             </div>
           </div>
+
+          <TableButtons allTables={allTables} tables={this.props.tables} parent={this}/>
         </form>
-        {this.props.result.length > 0 ? "" :
+        {tables.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No data found</div>
         }
         {this.props.menu == "rg" ?
-          this.props.result.map(function(table) {
+          tables.map(function(table) {
             return <RegionByTable.Regions key={table.name} sum={table.sumh} metric={this.props.metric}
                                       condensed={this.state.condensed} name={table.name} regions={table.regions}/>
           }, this) :
-          <RegionByTable.Table tables={this.props.result} condensed={this.state.condensed} metric={this.props.metric}/>}
+          <RegionByTable.Table tables={tables} condensed={this.state.condensed} metric={this.props.metric}/>}
       </div>
     )
   }
-})
+}, tableSelectable));
 
 RegionByTable.Table = React.createClass({
   render: function() {
