@@ -254,7 +254,8 @@
 
 ;;; Compojure route for web app
 (defroutes app-routes
-  (GET "/" []
+  (GET "/" {remote :remote-addr}
+       (util/debug (format "/ [%s]" remote))
        (render-file "public/index.html" {:zookeeper @zookeeper
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
@@ -263,11 +264,12 @@
 
 ;;; Compojure route for API
 (defroutes api-routes
-  (GET "/regions.json" _ (response @cached))
   (GET "/server_regions.json"
        {{:keys [sort metric]
          :or {sort "metric" metric "store-file-size-mb"}
-         :as params} :params}
+         :as params} :params
+        remote :remote-addr}
+       (util/debug (format "server_regions.json [%s]" remote))
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
@@ -279,7 +281,9 @@
   (GET "/table_regions.json"
        {{:keys [sort metric]
          :or {sort "metric" metric "store-file-size-mb"}
-         :as params} :params}
+         :as params} :params
+        remote :remote-addr}
+       (util/debug (format "table_regions.json [%s]" remote))
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
@@ -288,7 +292,8 @@
                                :sort       (keyword sort)
                                :tables     tables
                                :with-meta? @with-meta?}))))
-  (PUT "/move_region" {{:keys [src dest region]} :params}
+  (PUT "/move_region" {{:keys [src dest region]} :params remote :remote-addr}
+       (util/debug (format "move_region [%s]" remote))
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))
        (hbase/admin-let
