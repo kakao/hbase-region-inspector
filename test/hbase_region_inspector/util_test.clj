@@ -3,8 +3,8 @@
             [hbase-region-inspector.util :refer :all]))
 
 (deftest test-compare-server-names
-  (is (> (compare-server-names "foobar10" "foobar2")))
-  (is (< (compare-server-names "foo-1-bar02" "foo-1-bar010"))))
+  (is (> (compare-server-names "foobar10" "foobar2") 0))
+  (is (< (compare-server-names "foo-1-bar02" "foo-1-bar010") 0)))
 
 (deftest test-rand-range
   (let [min   10
