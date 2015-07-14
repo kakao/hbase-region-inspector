@@ -51,11 +51,11 @@
 ;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
 (defn- connect-admin [zk]
   (let [[quorum port] (str/split zk #"/")
-        port (or port 2181)]
+        port (or port "2181")]
     (HBaseAdmin.
       (doto (HBaseConfiguration/create)
         (.set "hbase.zookeeper.quorum" quorum)
-        (.setInt "hbase.zookeeper.property.clientPort" port)
+        (.set "hbase.zookeeper.property.clientPort" port)
         (.setInt "hbase.client.retries.number" 1)
         (.setInt "hbase.regions.slop" 0)
         (.setInt "zookeeper.recovery.retry" 1)))))
