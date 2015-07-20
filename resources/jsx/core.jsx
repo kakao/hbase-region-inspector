@@ -520,14 +520,16 @@ RegionByServer.Row = React.createClass({
             {regions.map(function(r) {
               var width = (this.props.max == 0 || localSum == 0) ? 0 :
                 100 * r[metric] / this.props.max;
+              var base = (width < 0.2) ?
+                { backgroundColor: colorFor(r.table)[1] } :
+                { backgroundColor: colorFor(r.table)[0],
+                  borderRight:     '1px solid' + colorFor(r.table)[1] };
+
               return width <= 0 ? "" : (
                 <div className={klass}
                      data-region={r['encoded-name']}
                      key={r['encoded-name']}
-                     style={{width: width + '%',
-                             color: colorFor(r.table)[1],
-                             backgroundColor: colorFor(r.table)[0],
-                             borderRight: '1px solid ' + colorFor(r.table)[1]}}
+                     style={_.extend(base, {width: width + '%', color: colorFor(r.table)[1]})}
                      data-content={r.html}
                      onClick={this.props.callback.bind(this.props.parent, r.table)}>
                   {(!condensed && width > 2) ? r.table.split(":").pop()[0] : ''}
@@ -682,14 +684,16 @@ RegionByTable.TableRow = React.createClass({
             {this.props.regions.map(function(r) {
               var width = (this.props.max == 0) ? 0 :
                 100 * r[this.props.metric] / this.props.max;
+              var base = (width < 0.2) ?
+                { backgroundColor: colorFor(r.table)[1] } :
+                { backgroundColor: colorFor(r.table)[0],
+                  borderRight:     '1px solid' + colorFor(r.table)[1] };
               var klass = "progress-bar extra-info" + (this.props.index > 2 ? "" : "-bottom")
               return width == 0 ? "" : (
                 <div className={klass}
                      key={r['encoded-name']}
                      data-content={r.html}
-                     style={{width: width + '%',
-                             backgroundColor: colorFor(r.table)[0],
-                             borderRight: '1px solid ' + colorFor(r.table)[1]}}>
+                     style={_.extend(base, {width: width + '%'})}>
                 </div>
               );
             }, this)}
