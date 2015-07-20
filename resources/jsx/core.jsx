@@ -52,7 +52,7 @@ function fire() {
 
 function fmt(val) {
   if (val > 10 || Math.floor(val) == val) {
-    return Math.floor(val);
+    return Math.floor(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
   return val.toFixed(2);
 }

@@ -27,15 +27,18 @@
 ;;; Inspection interval
 (def update-interval 10000)
 
+(defn long-fmt [val]
+  (str/replace (str (long val)) #"\B(?=(\d{3})+(?!\d))" ","))
+
 (defn format-val
   "String formatter for region properties"
   [type val & props]
-  (let [mb #(format "%d MB" (long %))
-        kb #(format "%d KB" (long %))
-        rate #(if (> % 10) (long %) (format "%.2f" (double %)))
+  (let [mb #(format "%s MB" (long-fmt %))
+        kb #(format "%s KB" (long-fmt %))
+        rate #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
         count-rate #(if %2
-                      (format "%s (%s/sec)" %1 (rate %2))
-                      (str %1))
+                      (format "%s (%s/sec)" (long-fmt %1) (rate %2))
+                      (long-fmt %1))
         props (or (first props) {})]
     (case type
       :start-key                ["Start key" (hbase/byte-buffer->str val)]
@@ -53,9 +56,9 @@
       :root-index-size-kb       ["Root index" (kb val)]
       :bloom-size-kb            ["Bloom filter" (kb val)]
       :total-index-size-kb      ["Total index" (kb val)]
-      :compaction               ["Compaction" (apply format "%d / %d" val)]
-      :used-heap-mb             ["Used heap" (str val " MB")]
-      :max-heap-mb              ["Max heap" (str val " MB")]
+      :compaction               ["Compaction" (apply format "%s / %s" (map long-fmt val))]
+      :used-heap-mb             ["Used heap" (mb val)]
+      :max-heap-mb              ["Max heap" (mb val)]
       [(util/keyword->str (str type))
        (if (instance? Number val) (rate val) val)])))
 
