@@ -1,4 +1,4 @@
-(def project-version "0.2.0")
+(def project-version "0.2.1")
 (def profiles [:0.94 :0.98])
 (def bins (into {} (for [profile profiles]
                      [profile (format "hbase-region-inspector-%s-%s"
@@ -12,9 +12,9 @@
   :repositories [["cloudera-releases"
                   "https://repository.cloudera.com/artifactory/cloudera-repos"]]
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [ring/ring-core "1.4.0-RC1"]
-                 [ring/ring-devel "1.4.0-RC1"]
-                 [ring/ring-jetty-adapter "1.4.0-RC1"]
+                 [ring/ring-core "1.4.0"]
+                 [ring/ring-devel "1.4.0"]
+                 [ring/ring-jetty-adapter "1.4.0"]
                  [ring/ring-defaults "0.1.5"]
                  [ring/ring-json "0.3.1"]
                  [compojure "1.3.4"]
