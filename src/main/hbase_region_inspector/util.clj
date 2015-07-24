@@ -14,7 +14,7 @@
   [min max]
   (+ min (rand (- max min))))
 
-(defn local-ip-address
+(defn local-ip-addresses
   "Returns the first local IPv4 address"
   []
   (let [addrs (->> (java.net.NetworkInterface/getNetworkInterfaces)
@@ -24,7 +24,7 @@
                    (mapcat #(enumeration-seq (.getInetAddresses %)))
                    (filter #(instance? java.net.Inet4Address %))
                    (map #(.getHostAddress %)))]
-    (or (first addrs) "127.0.0.1")))
+    (if (empty? addrs) ["127.0.0.1"] addrs)))
 
 (defn keyword->str
   [keyword]

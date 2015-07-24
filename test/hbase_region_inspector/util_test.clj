@@ -13,9 +13,10 @@
     (repeatedly times #(is (some (set (range min max))
                                  (rand-range min max))))))
 
-(deftest test-local-ip-address
-  (is (re-find #"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"
-               (local-ip-address))))
+(deftest test-local-ip-addresses
+  (is (every?
+        #(re-find #"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" %)
+        (local-ip-addresses))))
 
 (deftest test-keyword->str
   (is (= "Hello" (keyword->str :hello))))

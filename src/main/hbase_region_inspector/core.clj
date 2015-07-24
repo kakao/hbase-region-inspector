@@ -344,8 +344,9 @@
     (util/info "Start periodic update process")
     (start-periodic-updater!))
   ;; Start web server
-  (util/info (format "Starting web server: http://%s:%d"
-                     (util/local-ip-address) port))
+  (util/info "Starting web server:")
+  (doseq [ip (util/local-ip-addresses)]
+    (util/info (format "  http://%s:%d" ip port)))
   (run-jetty app {:port port}))
 
 (defn exit [message]
