@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.util
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]))
 
 (defn compare-server-names
   "Comparator function for server names. Pads numbers with zeros"
@@ -33,6 +34,17 @@
       (str/replace #"[:-]" " ")
       str/trim
       str/capitalize))
+
+(defn locate-file [basedir relpath]
+  (let [file (io/file relpath)]
+    (cond
+      (.isAbsolute file) relpath
+      (.exists file) (.getAbsolutePath file)
+      :else
+      (let [file (io/file basedir relpath)]
+        (if (.exists file)
+          (.getAbsolutePath file)
+          relpath)))))
 
 ;; Use hand-crafted logger functions instead of tools.logging
 (defn- log [type message]

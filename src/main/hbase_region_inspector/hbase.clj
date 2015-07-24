@@ -1,9 +1,11 @@
 (ns hbase-region-inspector.hbase
   (:require [clojure.string :as str]
+            [hbase-region-inspector.util :as util]
             [hbase-region-inspector.hbase.impl :as hbase-impl])
   (:import org.apache.hadoop.hbase.client.HBaseAdmin
            org.apache.hadoop.hbase.HBaseConfiguration
-           org.apache.hadoop.hbase.util.Bytes))
+           org.apache.hadoop.hbase.util.Bytes
+           org.apache.hadoop.security.UserGroupInformation))
 
 (defn- server-load->map
   "Transforms ServerLoad object into clojure map"
@@ -48,20 +50,47 @@
   [buf]
   (Bytes/toStringBinary buf))
 
-;; https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
-(defn- connect-admin [zk]
-  (let [[quorum port] (str/split zk #"/")
-        port (or port "2181")]
-    (HBaseAdmin.
-      (doto (HBaseConfiguration/create)
-        (.set "hbase.zookeeper.quorum" quorum)
-        (.set "hbase.zookeeper.property.clientPort" port)
-        (.setInt "hbase.client.retries.number" 1)
-        (.setInt "hbase.regions.slop" 0)
-        (.setInt "zookeeper.recovery.retry" 1)))))
+(defn- set-sys! [k v]
+  (util/debug (format "System/setProperty: %s => %s" k v))
+  (System/setProperty k v))
+
+(defn set-krb-properties! [config]
+  (let [realm (some-> (:hbase config)
+                      (get "hbase.master.kerberos.principal")
+                      (str/replace #".*@" ""))
+        krb-config (sun.security.krb5.Config/getInstance)
+        kdc-list (.getKDCList krb-config realm)]
+    (set-sys! "java.security.krb5.realm" realm)
+    (set-sys! "java.security.krb5.kdc" kdc-list)))
+
+(def build-hbase-conf
+  (memoize
+    (fn [{:keys [sys hbase
+                 krb? useKeyTab principal keyTab] :as conf}]
+      ;; Set system properties (java.*)
+      (doseq [[k v] sys] (set-sys! k v))
+
+      ;; Build HBaseConfiguration
+      ;; - https://support.pivotal.io/hc/en-us/articles/200933006-Hbase-application-hangs-indefinitely-connecting-to-zookeeper
+      (let [hbc (doto (HBaseConfiguration/create)
+                  (.setInt "hbase.client.retries.number" 1)
+                  (.setInt "zookeeper.recovery.retry" 1))]
+        (doseq [[k v] hbase] (.set hbc k v))
+        (when krb?
+          (set-krb-properties! conf)
+          (sun.security.krb5.Config/refresh)
+          (UserGroupInformation/setConfiguration hbc)
+          (if useKeyTab
+            (UserGroupInformation/loginUserFromKeytab principal keyTab)
+            (UserGroupInformation/loginUserFromSubject nil))
+          (util/debug (str "Current user: " (UserGroupInformation/getCurrentUser))))
+        hbc))))
+
+(defn connect-admin [conf]
+  (HBaseAdmin. (build-hbase-conf conf)))
 
 (defmacro admin-let
-  [[name zk] & body]
-  `(let [admin# (~connect-admin ~zk)
+  [[name conf] & body]
+  `(let [admin# (~connect-admin ~conf)
          ~name admin#]
      (try (doall ~@body) (finally (.close admin#)))))

@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.core
   (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
@@ -9,11 +10,12 @@
             [hiccup.core :as h]
             [selmer.parser :refer [render-file]]
             [hbase-region-inspector.hbase :as hbase]
-            [hbase-region-inspector.util :as util])
+            [hbase-region-inspector.util :as util]
+            [hbase-region-inspector.config :as config])
   (:gen-class))
 
 ;;; ZooKeeper quorum we point to
-(defonce zookeeper (atom "localhost"))
+(defonce config (atom {}))
 
 ;;; Whether we should allow region relocation or not
 (defonce read-only? (atom false))
@@ -32,14 +34,14 @@
 
 (defn format-val
   "String formatter for region properties"
-  [type val & props]
+  [type val & [props]]
   (let [mb #(format "%s MB" (long-fmt %))
         kb #(format "%s KB" (long-fmt %))
         rate #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
         count-rate #(if %2
                       (format "%s (%s/sec)" (long-fmt %1) (rate %2))
                       (long-fmt %1))
-        props (or (first props) {})]
+        props (or props {})]
     (case type
       :start-key                ["Start key" (hbase/byte-buffer->str val)]
       :end-key                  ["End key" (hbase/byte-buffer->str val)]
@@ -105,9 +107,9 @@
 
 (defn collect-info
   "Collects information from hbase"
-  [zk]
+  [config]
   (hbase/admin-let
-    [admin zk]
+    [admin config]
     (hbase/collect-info admin)))
 
 (defn region-location?
@@ -136,7 +138,7 @@
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
-                           #(reduce - 0 (map metric (last %)))
+                           #(reduce - 0 (map metric (val %)))
                            (group-by :table all-regions)))
 
         ;; Tables to show
@@ -148,7 +150,7 @@
 
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
-                     (sort-by first util/compare-server-names
+                     (sort-by key util/compare-server-names
                               (group-by :server visible-regions)))
         ;; Function to sort the regions in the descending order
         score-fn #(vector (- (metric %))
@@ -201,7 +203,7 @@
                             [table (reduce #(+ %1 (metric %2)) 0 regions)]))
         ;; List of maps with table-level sums
         list-with-sum (map #(assoc (zipmap [:name :regions] %)
-                                   :sum (grouped-sum (first %)))
+                                   :sum (grouped-sum (key %)))
                            grouped)
         ;; Sort the list by table name
         sorted (sort-by :name list-with-sum)
@@ -218,7 +220,7 @@
                                [(:name region) region]))
         {new-regions :regions
          servers     :servers} (util/elapsed-time "collect-info"
-                                                  (collect-info @zookeeper))
+                                                  (collect-info @config))
         prev-time (:updated-at @cached)
         now (System/currentTimeMillis)
         interval (- now (or prev-time now))
@@ -259,7 +261,7 @@
 (defroutes app-routes
   (GET "/" {remote :remote-addr}
        (util/debug (format "/ [%s]" remote))
-       (render-file "public/index.html" {:zookeeper @zookeeper
+       (render-file "public/index.html" {:zookeeper (:zookeeper @config)
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))
@@ -300,7 +302,7 @@
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))
        (hbase/admin-let
-         [admin @zookeeper]
+         [admin @config]
          (.move admin (.getBytes region) (.getBytes dest))
          (loop [tries 20
                 message (format "Moving %s from %s to %s" region src dest)]
@@ -334,10 +336,10 @@
               wrap-exception)
           (route/not-found "404")))
 
-(defn- bootstrap [zk port bg]
-  ;; Make sure that we can connect to the given ZooKeeper quorum before
+(defn- bootstrap [conf port bg]
+  ;; Make sure that we can connect to the cluster before
   ;; starting background process
-  (reset! zookeeper zk)
+  (reset! config conf)
   (update-regions!)
   ;; Start background process
   (when bg
@@ -351,7 +353,8 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: hbase-region-inspector [--read-only --with-meta] QUORUM[/ZKPORT] PORT")
+  (println "usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT")
+  (println "                                                        └ CONFIG_FILE     ┘")
   (System/exit 1))
 
 (defn -main [& args]
@@ -361,8 +364,9 @@
     (reset! with-meta? (contains? opts :with-meta))
     (when (not= 2 (count args)) (exit "invalid number of arguments"))
     (try
-      (let [[zk port] args
+      (let [[spec port] args
+            conf (config/parse spec)
             port (Integer/parseInt port)]
-        (bootstrap zk port true))
+        (bootstrap conf port true))
       (catch NumberFormatException e (exit "invalid port")))))
 

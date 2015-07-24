@@ -3,8 +3,19 @@
 ## Usage
 
 ```
-usage: hbase-region-inspector QUORUM[/ZKPORT] PORT
+usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT
+                                                        └ CONFIG_FILE     ┘
 ```
+
+To access a secured HBase cluster, you have to prepare the following
+configuration files:
+
+- The main properties file
+- JAAS login configuration
+- Kerberos configuration (usually `/etc/krb5.conf`)
+- Kerberos keytab (optional, but recommended)
+
+You can find the examples in [conf-examples](conf-examples/).
 
 ## Prerequisites
 
