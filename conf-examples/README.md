@@ -21,6 +21,7 @@ argument.
 
 - [secure-keytab.properties](secure-keytab.properties)
 - [secure-keytab-jaas.conf](secure-keytab-jaas.conf)
+- Kerberos configuration (`/etc/krb5.conf`)
 - Kerberos keytab
 
 Manual renewal of ticket is not needed.
@@ -29,6 +30,7 @@ Manual renewal of ticket is not needed.
 
 - [secure-ticket-cache.properties](secure-ticket-cache.properties)
 - [secure-ticket-cache-jaas.conf](secure-ticket-cache-jaas.conf)
+- Kerberos configuration (`/etc/krb5.conf`)
 
 In this case, you have to obtain a ticket cache beforehand with `kinit`.
 
