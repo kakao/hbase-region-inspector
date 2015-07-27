@@ -16,13 +16,13 @@ You can simply pass the ZooKeeper quorum instead as the command-line argument.
 ### Authentication with keytab
 
 - [secure-keytab.properties](secure-keytab.properties)
-- [secure-keytab-jass.conf](secure-keytab-jass.conf)
+- [secure-keytab-jaas.conf](secure-keytab-jaas.conf)
 - Kerberos keytab
 
 ### Authentication with ticket cache
 
 - [secure-ticket-cache.properties](secure-ticket-cache.properties)
-- [secure-ticket-cache-jass.conf](secure-ticket-cache-jass.conf)
+- [secure-ticket-cache-jaas.conf](secure-ticket-cache-jaas.conf)
 
 In this case, you have to obtain a ticket cache beforhand with `kinit`.
 
