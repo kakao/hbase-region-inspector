@@ -82,7 +82,11 @@
           (UserGroupInformation/setConfiguration hbc)
           (if useKeyTab
             (UserGroupInformation/loginUserFromKeytab principal keyTab)
-            (UserGroupInformation/loginUserFromSubject nil))
+            (let [method
+                  (.getMethod UserGroupInformation
+                              "loginUserFromSubject"
+                              (into-array Class [javax.security.auth.Subject]))]
+              (.invoke method nil (object-array [nil]))))
           (util/debug "Current user: " (UserGroupInformation/getCurrentUser)))
         hbc))))
 
