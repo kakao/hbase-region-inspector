@@ -47,13 +47,14 @@
           relpath)))))
 
 ;; Use hand-crafted logger functions instead of tools.logging
-(defn- log [type message]
-  (println (format "%s: %s: %s" (java.util.Date.) type message)))
-(defn info [message] (log "INFO" message))
-(defn debug [message]
+(defn- log [type & message]
+  (println (format "%s: %s: %s" (java.util.Date.) type (apply str message))))
+(defn debug [& message]
   (if (System/getenv "DEBUG")
-    (log "DEBUG" message)))
-(defn error [message] (log "ERROR" message))
+    (apply log "DEBUG" message)))
+(defn info [& message] (apply log "INFO" message))
+(defn warn [& message] (apply log "WARN" message))
+(defn error [& message] (apply log "ERROR" message))
 
 (defmacro elapsed-time
   [name & body]

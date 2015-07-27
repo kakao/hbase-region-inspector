@@ -83,7 +83,7 @@
           (if useKeyTab
             (UserGroupInformation/loginUserFromKeytab principal keyTab)
             (UserGroupInformation/loginUserFromSubject nil))
-          (util/debug (str "Current user: " (UserGroupInformation/getCurrentUser))))
+          (util/debug "Current user: " (UserGroupInformation/getCurrentUser)))
         hbc))))
 
 (defn connect-admin [conf]

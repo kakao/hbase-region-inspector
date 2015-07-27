@@ -54,10 +54,16 @@
         contexts
         (map #(assoc (parse-pairs (last %)) :context (nth % 1))
              (re-seq
-               #"(?si)(\S+)\s*\{.*Krb5LoginModule\s*required(.*)\}"
-               content))]
-    ;; XXX The first one is used
-    (first contexts)))
+               #"(?si)(\S+)\s*\{.*?Krb5LoginModule\s*required(.*?)\}"
+               content))
+        chosen (first contexts)]
+    (cond (> (count contexts) 1)
+          (util/warn
+            "Multiple configurations found in " path
+            ". Using " (:context chosen))
+          (nil? chosen)
+          (util/warn "No configuration found in " path))
+    chosen))
 
 (defn parse-config-file [^java.io.File file]
   (let [locate (partial util/locate-file (.getParent file))
