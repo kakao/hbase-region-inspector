@@ -55,11 +55,11 @@
   (System/setProperty k v))
 
 (defn set-krb-properties! [config]
-  (let [realm (some-> (:hbase config)
-                      (get "hbase.master.kerberos.principal")
-                      (str/replace #".*@" ""))
+  (let [realm (-> (:hbase config)
+                  (get "hbase.master.kerberos.principal")
+                  (str/replace #".*@" ""))
         krb-config (sun.security.krb5.Config/getInstance)
-        kdc-list (.getKDCList krb-config realm)]
+        kdc-list   (.getKDCList krb-config realm)]
     (set-sys! "java.security.krb5.realm" realm)
     (set-sys! "java.security.krb5.kdc" kdc-list)))
 

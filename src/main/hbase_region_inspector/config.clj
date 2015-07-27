@@ -16,7 +16,7 @@
     val
     (throw (IllegalArgumentException. (str key " not found")))))
 
-(defn validate [config]
+(defn- validate [config]
   (let [{:keys [krb? useKeyTab keyTab principal context hbase sys]} config]
     (require-key hbase "hbase.zookeeper.quorum")
     (when krb?
@@ -39,7 +39,7 @@
                    "JAAS configuration is missing keyTab entry"))))))
   config)
 
-(defn parse-pairs [string]
+(defn- parse-pairs [string]
   (into {}
         (for [[_ k v1 v2] (re-seq #"(\S+)=(?:\"([^\"]+)\"|(\S+))" string)]
           [(keyword k)
@@ -49,7 +49,7 @@
                "false" false
                v))])))
 
-(defn parse-jaas [path]
+(defn- parse-jaas [path]
   (let [content (slurp path)
         contexts
         (map #(assoc (parse-pairs (last %)) :context (nth % 1))
@@ -65,7 +65,7 @@
           (util/warn "No configuration found in " path))
     chosen))
 
-(defn parse-config-file [^java.io.File file]
+(defn- parse-config-file [^java.io.File file]
   (let [locate (partial util/locate-file (.getParent file))
         rdr    (io/reader file)
         props  (into {} (doto (Properties.) (.load rdr)))
@@ -82,7 +82,7 @@
     (merge {:krb? krb? :hbase hb :sys sys}
            (if krb? (parse-jaas jaas)))))
 
-(defn build-config [quorum]
+(defn- build-config [quorum]
   (let [[quorum port] (str/split quorum #"/")]
     {:krb? false
      :hbase (merge {"hbase.zookeeper.quorum" quorum}
