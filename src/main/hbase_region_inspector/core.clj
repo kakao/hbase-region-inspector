@@ -27,7 +27,7 @@
 (defonce cached (atom {:updated-at nil :regions []}))
 
 ;;; Inspection interval
-(def update-interval 10000)
+(defonce update-interval (atom 10))
 
 (defn long-fmt [val]
   (str/replace (str (long val)) #"\B(?=(\d{3})+(?!\d))" ","))
@@ -250,7 +250,7 @@
   []
   (future
     (loop []
-      (Thread/sleep update-interval)
+      (Thread/sleep (* @update-interval 1000))
       (try
         (#'update-regions!)
         (catch Exception e
@@ -262,6 +262,7 @@
   (GET "/" {remote :remote-addr}
        (util/debug (format "/ [%s]" remote))
        (render-file "public/index.html" {:zookeeper (:zookeeper @config)
+                                         :interval @update-interval
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))
@@ -353,7 +354,7 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT")
+  (println "usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]")
   (println "                                                        └ CONFIG_FILE     ┘")
   (System/exit 1))
 
@@ -362,11 +363,13 @@
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
     (reset! read-only? (contains? opts :read-only))
     (reset! with-meta? (contains? opts :with-meta))
-    (when (not= 2 (count args)) (exit "invalid number of arguments"))
+    (when-not (<= 2 (count args) 3) (exit "invalid number of arguments"))
     (try
-      (let [[spec port] args
+      (let [[spec port interval] args
             conf (config/parse spec)
             port (Integer/parseInt port)]
+        (if interval
+          (reset! update-interval (Integer/parseInt interval)))
         (bootstrap conf port true))
       (catch NumberFormatException e (exit "invalid port")))))
 

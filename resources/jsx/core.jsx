@@ -1,6 +1,6 @@
 var refresh = {
   version: 0,
-  interval: 10,
+  interval: _interval,
   ticks: 0,
   paused: false,
   pause: function() {

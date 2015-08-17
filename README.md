@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT
+usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
                                                         └ CONFIG_FILE     ┘
 ```
 
