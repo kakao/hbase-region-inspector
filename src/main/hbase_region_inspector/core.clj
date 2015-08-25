@@ -45,7 +45,7 @@
     (case type
       :start-key                ["Start key" (hbase/byte-buffer->str val)]
       :end-key                  ["End key" (hbase/byte-buffer->str val)]
-      :stores                   ["Storefiles" val]
+      :store-files              ["Storefiles" val]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
                                    (format "%s (%s)" (mb val) (mb uncmp))
@@ -79,7 +79,7 @@
                [:server
                 :start-key :end-key
                 :store-file-size-mb
-                :stores
+                :store-files
                 :memstore-size-mb
                 :requests
                 :read-requests
