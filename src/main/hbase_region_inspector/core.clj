@@ -20,8 +20,8 @@
 ;;; Whether we should allow region relocation or not
 (defonce read-only? (atom false))
 
-;;; Whether we should include meta region or not
-(defonce with-meta? (atom false))
+;;; Whether we should include system regions or not
+(defonce with-system? (atom false))
 
 ;;; Cache the result of previous inspection
 (defonce cached (atom {:updated-at nil :regions []}))
@@ -129,12 +129,18 @@
           region
           [:start-key :end-key]))
 
+(defn- system? [region]
+  (or (:meta? region)
+      (let [table (:table region)]
+        (or (.startsWith table "hbase:")
+            (#{".META." "-ROOT-"} table)))))
+
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
-  [{:keys [regions servers metric sort tables with-meta?]
-    :or   {tables nil with-meta? false}}]
+  [{:keys [regions servers metric sort tables with-system?]
+    :or   {tables nil with-system? false}}]
   (let [;; Exclude meta regions
-        all-regions (if with-meta? regions (remove :meta? regions))
+        all-regions (if with-system? regions (remove system? regions))
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
@@ -175,10 +181,10 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [{:keys [regions metric sort tables with-meta?]
-    :or   {tables nil with-meta? false}}]
+  [{:keys [regions metric sort tables with-system?]
+    :or   {tables nil with-system? false}}]
   (let [;; Exclude hbase:meta table
-        all-regions (if with-meta? regions (remove :meta? regions))
+        all-regions (if with-system? regions (remove system? regions))
 
         ;; Sort the tables in their names
         all-tables (->> all-regions (map :table) (apply sorted-set) vec)
@@ -279,11 +285,11 @@
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
-           (regions-by-servers (merge (select-keys @cached [:regions :servers])
-                                      {:metric     (keyword metric)
-                                       :sort       (keyword sort)
-                                       :tables     tables
-                                       :with-meta? @with-meta?})))))
+           (regions-by-servers (merge (select-keys   @cached  [:regions :servers])
+                                      {:metric       (keyword metric)
+                                       :sort         (keyword sort)
+                                       :tables       tables
+                                       :with-system? @with-system?})))))
   (GET "/table_regions.json"
        {{:keys [sort metric]
          :or {sort "metric" metric "store-file-size-mb"}
@@ -293,11 +299,11 @@
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
-           (regions-by-tables {:regions    (:regions @cached)
-                               :metric     (keyword metric)
-                               :sort       (keyword sort)
-                               :tables     tables
-                               :with-meta? @with-meta?}))))
+           (regions-by-tables {:regions      (:regions @cached)
+                               :metric       (keyword metric)
+                               :sort         (keyword sort)
+                               :tables       tables
+                               :with-system? @with-system?}))))
   (PUT "/move_region" {{:keys [src dest region]} :params remote :remote-addr}
        (util/debug (format "move_region [%s]" remote))
        (when @read-only?
@@ -354,15 +360,21 @@
 
 (defn exit [message]
   (println message)
-  (println "usage: hbase-region-inspector [--read-only --with-meta] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]")
-  (println "                                                        └ CONFIG_FILE     ┘")
+  (println
+    (str/join
+      "\n"
+      ["usage: hbase-region-inspector [--read-only --system] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]"
+       "                                                     └ CONFIG_FILE     ┘"
+       "  Options"
+       "   --read-only   Disable drag-and-drop interface "
+       "   --system      Show system tables "]))
   (System/exit 1))
 
 (defn -main [& args]
   (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
     (reset! read-only? (contains? opts :read-only))
-    (reset! with-meta? (contains? opts :with-meta))
+    (reset! with-system? (contains? opts :system))
     (when-not (<= 2 (count args) 3) (exit "invalid number of arguments"))
     (try
       (let [[spec port interval] args
