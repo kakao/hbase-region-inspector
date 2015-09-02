@@ -6,7 +6,7 @@
   (is (= ["Memstore" "100 MB"] (format-val :memstore-size-mb 100)))
   (is (= ["Memstore" "1 MB"] (format-val :memstore-size-mb 1.2)))
   (is (= ["Data size" "1,000 MB"] (format-val :store-file-size-mb 1000)))
-  (is (= ["Data size" "1,000 MB (2,000 MB)"]
+  (is (= ["Data size" "1,000 MB / 2,000 MB (50.00%)"]
          (format-val :store-file-size-mb 1000 {:store-uncompressed-size-mb 2000})))
   (is (= ["Requests" "3,000"] (format-val :requests 3000)))
   (is (= ["Requests" "3,000 (3.14/sec)"]
@@ -18,7 +18,7 @@
   (is (= (str
            "<h3>foobar <small>baz</small></h3>"
            "<table class=\"table table-condensed table-striped\">"
-           "<tbody><tr><th class=\"col-xs-2\">Data size</th><td>1,000 MB (2,000 MB)</td></tr></tbody></table>")
+           "<tbody><tr><th class=\"col-xs-2\">Data size</th><td>1,000 MB / 2,000 MB (50.00%)</td></tr></tbody></table>")
          (build-region-popover {:table "foobar"
                                 :encoded-name "baz"
                                 :store-file-size-mb 1000

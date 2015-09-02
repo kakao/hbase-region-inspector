@@ -48,7 +48,11 @@
       :store-files              ["Storefiles" val]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
-                                   (format "%s (%s)" (mb val) (mb uncmp))
+                                   (if (pos? val)
+                                     (format "%s / %s (%.2f%%)"
+                                             (mb val) (mb uncmp)
+                                             (double (/ val uncmp 0.01)))
+                                     (format "%s / %s" (mb val) (mb uncmp)))
                                    (mb val))]
       :store-file-index-size-mb ["Index" (mb val)]
       :memstore-size-mb         ["Memstore" (mb val)]

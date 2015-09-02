@@ -7,15 +7,22 @@
            org.apache.hadoop.hbase.util.Bytes
            org.apache.hadoop.security.UserGroupInformation))
 
-(defn- server-load->map
+(defn server-load->map
   "Transforms ServerLoad object into clojure map"
   [load]
-  {:max-heap-mb        (.getMaxHeapMB load)
-   :used-heap-mb       (.getUsedHeapMB load)
-   :regions            (.getNumberOfRegions load)
-   :requests-rate      (.getNumberOfRequests load)
-   :store-files        (.getStorefiles load)
-   :store-file-size-mb (.getStorefileSizeInMB load)})
+  (assoc
+    {:max-heap-mb        (.getMaxHeapMB load)
+     :used-heap-mb       (.getUsedHeapMB load)
+     :regions            (.getNumberOfRegions load)
+     :requests-rate      (.getNumberOfRequests load)
+     :store-files        (.getStorefiles load)
+     :store-file-size-mb (.getStorefileSizeInMB load)}
+    :store-uncompressed-size-mb
+    (->> load
+         str
+         (re-find #"storefileUncompressedSizeMB=([0-9]+)")
+         last
+         Integer/parseInt)))
 
 (defn- collect-server-info
   "Collects server statistics"
