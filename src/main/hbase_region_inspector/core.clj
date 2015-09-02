@@ -43,9 +43,9 @@
                       (long-fmt %1))
         props (or props {})]
     (case type
-      :start-key                ["Start key" (hbase/byte-buffer->str val)]
-      :end-key                  ["End key" (hbase/byte-buffer->str val)]
-      :store-files              ["Storefiles" val]
+      :start-key                ["Start key"  (hbase/byte-buffer->str val)]
+      :end-key                  ["End key"    (hbase/byte-buffer->str val)]
+      :store-files              ["Storefiles" (long-fmt val)]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
                                    (if (pos? val)
@@ -54,60 +54,76 @@
                                              (double (/ val uncmp 0.01)))
                                      (format "%s / %s" (mb val) (mb uncmp)))
                                    (mb val))]
-      :store-file-index-size-mb ["Index" (mb val)]
-      :memstore-size-mb         ["Memstore" (mb val)]
-      :requests                 ["Requests" (count-rate val (:requests-rate props))]
-      :read-requests            ["Reads" (count-rate val (:read-requests-rate props))]
-      :write-requests           ["Writes" (count-rate val (:write-requests-rate props))]
-      :root-index-size-kb       ["Root index" (kb val)]
+      :store-file-index-size-mb ["Index"        (mb val)]
+      :memstore-size-mb         ["Memstore"     (mb val)]
+      :requests                 ["Requests"     (count-rate val (:requests-rate props))]
+      :read-requests            ["Reads"        (count-rate val (:read-requests-rate props))]
+      :write-requests           ["Writes"       (count-rate val (:write-requests-rate props))]
+      :root-index-size-kb       ["Root index"   (kb val)]
       :bloom-size-kb            ["Bloom filter" (kb val)]
-      :total-index-size-kb      ["Total index" (kb val)]
-      :compaction               ["Compaction" (apply format "%s / %s" (map long-fmt val))]
-      :used-heap-mb             ["Used heap" (mb val)]
-      :max-heap-mb              ["Max heap" (mb val)]
+      :total-index-size-kb      ["Total index"  (kb val)]
+      :compaction               ["Compaction"   (apply format "%s / %s" (map long-fmt val))]
+      :used-heap-mb             ["Used heap"    (mb val)]
+      :max-heap-mb              ["Max heap"     (mb val)]
       [(util/keyword->str (str type))
        (if (instance? Number val) (rate val) val)])))
+
+(defn build-popover
+  "Builds a small HTML snippet for an entity"
+  [title keys props]
+  (let [{:keys [table encoded-name]} props]
+    (h/html
+      title
+      [:table {:class "table table-condensed table-striped"}
+       [:tbody
+        (map #(let [[k v] (format-val % (% props) props)]
+                [:tr [:th {:class "col-xs-2"} k] [:td v]])
+             (filter #(% props) keys))]])))
 
 (defn build-region-popover
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
   [props]
   (let [{:keys [table encoded-name]} props]
-    (h/html
+    (build-popover
       [:h3 table " " [:small encoded-name]]
-      [:table {:class "table table-condensed table-striped"}
-       [:tbody
-        (map #(let [[k v] (format-val % (% props) props)]
-                [:tr [:th {:class "col-xs-2"} k] [:td v]])
-             (filter
-               #(% props)
-               [:server
-                :start-key :end-key
-                :store-file-size-mb
-                :store-files
-                :memstore-size-mb
-                :requests
-                :read-requests
-                :write-requests
-                :compaction]))]])))
+      [:server
+       :start-key :end-key
+       :store-file-size-mb
+       :store-files
+       :memstore-size-mb
+       :requests
+       :read-requests
+       :write-requests
+       :compaction]
+      props)))
 
 (defn build-server-popover
   "Builds a small HTML snippet for each server to be used in bootstrap popover"
   [props]
-  (let [{:keys [name]} props]
-    (h/html
-      [:h3 name]
-      [:table {:class "table table-condensed table-striped"}
-       [:tbody
-        (map #(let [[k v] (format-val % (% props) props)]
-                [:tr [:th {:class "col-xs-2"} k] [:td v]])
-             (filter
-               #(% props)
-               [:requests-rate
-                :regions
-                :store-file-size-mb
-                :store-files
-                :used-heap-mb
-                :max-heap-mb]))]])))
+  (build-popover
+    [:h3 (:name props)]
+    [:regions
+     :store-files
+     :store-file-size-mb
+     :requests-rate
+     :used-heap-mb
+     :max-heap-mb]
+    props))
+
+(defn build-table-popover
+  "Builds a small HTML snippet for each table to be used in bootstrap popover"
+  [props]
+  (build-popover
+    [:h3 (:name props)]
+    [:regions
+     :store-files
+     :store-file-size-mb
+     :requests
+     :read-requests
+     :write-requests
+     :used-heap-mb
+     :max-heap-mb]
+    props))
 
 (defn collect-info
   "Collects information from hbase"
@@ -185,7 +201,7 @@
 
 (defn regions-by-tables
   "Generates output for /table_regions.json. Regions grouped by their tables."
-  [{:keys [regions metric sort tables with-system?]
+  [{:keys [regions table-summary metric sort tables with-system?]
     :or   {tables nil with-system? false}}]
   (let [;; Exclude hbase:meta table
         all-regions (if with-system? regions (remove system? regions))
@@ -218,9 +234,37 @@
         ;; Sort the list by table name
         sorted (sort-by :name list-with-sum)
         ;; Sorted with human-readable sum
-        sorted (map #(assoc % :sumh (last (format-val metric (:sum %)))) sorted)]
+        sorted (map #(assoc %
+                            :sumh (last (format-val metric (:sum %)))
+                            :html (get-in table-summary [(:name %) :html])) sorted)]
     {:all-tables all-tables
      :tables     sorted}))
+
+(defn group-by-tables
+  "Aggregate table statistics from regions"
+  [regions]
+  (reduce (fn [summary region]
+            (let [table (:table region)
+                  sofar (summary table)
+                  data (select-keys region [:requests
+                                            :requests-rate
+                                            :read-requests
+                                            :read-requests-rate
+                                            :write-requests
+                                            :write-requests-rate
+                                            :store-file-size-mb
+                                            :store-uncompressed-size-mb
+                                            :store-files
+                                            :used-heap-mb
+                                            :max-heap-mb])
+                  with-count (assoc data :regions 1)
+                  new (merge-with + sofar with-count)]
+              (assoc summary
+                     table
+                     (as-> new $
+                         (assoc $ :name table)
+                         (assoc $ :html (build-table-popover $))))))
+          {} regions))
 
 (defn update-regions!
   "Collects region info from HBase and store it in @cached"
@@ -253,7 +297,8 @@
                            [k (assoc v :html (build-server-popover v))]))]
     (reset! cached {:updated-at now
                     :regions new-regions
-                    :servers servers})))
+                    :servers servers
+                    :tables  (group-by-tables new-regions)})))
 
 (defn start-periodic-updater!
   "Starts a thread that periodically runs update-regions!"
@@ -303,11 +348,12 @@
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
          (response
-           (regions-by-tables {:regions      (:regions @cached)
-                               :metric       (keyword metric)
-                               :sort         (keyword sort)
-                               :tables       tables
-                               :with-system? @with-system?}))))
+           (regions-by-tables {:regions       (:regions @cached)
+                               :table-summary (:tables @cached)
+                               :metric        (keyword metric)
+                               :sort          (keyword sort)
+                               :tables        tables
+                               :with-system?  @with-system?}))))
   (PUT "/move_region" {{:keys [src dest region]} :params remote :remote-addr}
        (util/debug (format "move_region [%s]" remote))
        (when @read-only?

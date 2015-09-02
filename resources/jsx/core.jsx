@@ -674,8 +674,8 @@ RegionByTable.TableRow = React.createClass({
     var condensed = this.props.condensed ? " condensed" : ""
     return (
       <tr className={this.props.condensed ? "condensed" : ""}>
-        <td className="text-muted col-xs-1">
-          <div className="mono-space">
+        <td className="text-muted col-xs-1 nowrap">
+          <div className="mono-space extra-info-right" data-content={this.props.html}>
             {this.props.name}
           </div>
         </td>
