@@ -18,11 +18,11 @@
      :store-files        (.getStorefiles load)
      :store-file-size-mb (.getStorefileSizeInMB load)}
     :store-uncompressed-size-mb
-    (->> load
-         str
-         (re-find #"storefileUncompressedSizeMB=([0-9]+)")
-         last
-         Integer/parseInt)))
+    (some->> load
+             str
+             (re-find #"storefileUncompressedSizeMB=([0-9]+)")
+             last
+             Integer/parseInt)))
 
 (defn- collect-server-info
   "Collects server statistics"
