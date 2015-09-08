@@ -192,7 +192,7 @@ function refreshApp(menu, opts) {
   clearTimeout(refresh.timeout);
   refresh.version++;
 
-  var url = menu == "rs" ? "/server_regions.json" : "/table_regions.json"
+  var url = menu == "servers" ? "/server_regions.json" : "/table_regions.json"
   var currentVersion = refresh.version;
   debug(opts)
   $.ajax({
@@ -216,10 +216,26 @@ function refreshApp(menu, opts) {
   });
 }
 
+function parseHash() {
+  var ret = {menu: "servers", sort: "metric", metric: "store-file-size-mb"};
+  var vals = window.location.hash.split("#");
+  if (vals.length > 1) {
+    ret.menu = vals[1];
+    ret.sort = vals[1] == "regions" ? "start-key" : "metric";
+  }
+  if (vals.length > 2) {
+    ret.metric = vals[2];
+  }
+  return ret;
+}
+
 var App = React.createClass({
   getDefaultProps: function() {
+    var opts = parseHash();
     return {
-      menu: "rs"
+      menu: opts.menu,
+      sort: opts.sort,
+      metric: opts.metric
     }
   },
   spinner: null,
@@ -229,7 +245,7 @@ var App = React.createClass({
       var target = document.getElementById("spinner");
       this.spinner = new Spinner({color:'#999', lines: 12}).spin(target);
     }
-    refreshApp(this.props.menu, {});
+    refreshApp(this.props.menu, {sort: this.props.sort, metric: this.props.metric});
   },
   componentDidUpdate: function(prevProps, prevState) {
     debug("app-updated");
@@ -239,7 +255,13 @@ var App = React.createClass({
     enablePopover();
   },
   changeMenu: function(menu) {
-    refreshApp(menu, {sort: menu == "rg" ? "start-key" : "metric", tables: _tables});
+    var opts = {sort: menu == "regions" ? "start-key" : "metric", tables: _tables};
+    var vals = window.location.hash.split("#");
+    if (vals.length > 2) {
+      opts.metric = vals[2];
+    }
+    window.location.hash = "#" + menu + (vals.length > 2 ? "#" + vals[2] : "");
+    refreshApp(menu, opts);
   },
   render: function() {
     debug(this.props.menu);
@@ -251,20 +273,20 @@ var App = React.createClass({
               <a className="navbar-brand" href="/">
                 <span className="glyphicon glyphicon-align-left" aria-hidden="true"></span>
               </a>
-              <a className="navbar-brand" href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>
+              <a className="navbar-brand" href="javascript:void(0)" onClick={this.changeMenu.bind(this, "servers")}>
                 hbase-region-inspector
               </a>
             </div>
             <div className="collapse navbar-collapse">
               <ul className="nav navbar-nav">
-                <li className={this.props.menu == "rs" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rs")}>Servers</a>
+                <li className={this.props.menu == "servers" ? "active" : ""}>
+                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "servers")}>Servers</a>
                 </li>
-                <li className={this.props.menu == "tb" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tb")}>Tables</a>
+                <li className={this.props.menu == "tables" ? "active" : ""}>
+                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tables")}>Tables</a>
                 </li>
-                <li className={this.props.menu == "rg" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "rg")}>Regions</a>
+                <li className={this.props.menu == "regions" ? "active" : ""}>
+                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "regions")}>Regions</a>
                 </li>
               </ul>
 
@@ -285,9 +307,9 @@ var App = React.createClass({
                 </span> Failed to collect data from server (<span className="refresh_msg"></span>)
               </h5>
             </div>
-          ) : this.props.menu == "rs" ?
+          ) : this.props.menu == "servers" ?
                 <RegionByServer {...this.props}/> :
-                <RegionByTable sort={this.props.menu == "rg" ? "start-key" : ""} {...this.props}/>}
+                <RegionByTable sort={this.props.menu == "regions" ? "start-key" : ""} {...this.props}/>}
         </div>
         <div id="modal" className="modal">
           <div className="modal-dialog">
@@ -327,12 +349,20 @@ var tableSelectable = {
   }
 };
 
+var metricSelectable = {
+  setMetric: function(val) {
+    window.location.hash = "#" + this.props.menu + "#" + val;
+    this.refresh({ metric: val });
+  }
+}
+
 var RegionByServer = React.createClass(_.extend({
   getDefaultProps: function() {
+    var opts = parseHash();
     return {
       tables: [],
-      sort:   "metric",
-      metric: "store-file-size-mb",
+      sort:   opts.sort,
+      metric: opts.metric,
       result: null
     }
   },
@@ -355,9 +385,6 @@ var RegionByServer = React.createClass(_.extend({
       this.refresh({}, true);
     }.bind(this));
   },
-  setMetric: function(val) {
-    this.refresh({ metric: val });
-  },
   setSort: function(val) {
     this.refresh({ sort: val });
   },
@@ -371,7 +398,7 @@ var RegionByServer = React.createClass(_.extend({
   },
   refresh: function(opts, nofade) {
     if (!nofade) $("table").fadeTo(100, 0.5);
-    refreshApp("rs", _.extend(_.omit(this.props, "result"), opts))
+    refreshApp("servers", _.extend(_.omit(this.props, "result"), opts))
   },
   render: function() {
     if (this.props.result == null) {
@@ -435,7 +462,7 @@ var RegionByServer = React.createClass(_.extend({
       </div>
     )
   }
-}, tableSelectable));
+}, metricSelectable, tableSelectable));
 
 var MetricsTab = React.createClass({
   render: function() {
@@ -553,11 +580,12 @@ var RegionByTable = React.createClass(_.extend({
     }
   },
   getDefaultProps: function() {
+    var opts = parseHash()
     return {
       tables: [],
-      metric: "store-file-size-mb",
-      sort:   "metric",
-      menu:   "tb"
+      metric: opts.metric,
+      sort:   opts.sort,
+      menu:   "tables"
     }
   },
   componentDidUpdate: function(prevProps, prevState) {
@@ -572,9 +600,6 @@ var RegionByTable = React.createClass(_.extend({
       debug("refresh table-regions");
       this.refresh({}, true);
     }.bind(this));
-  },
-  setMetric: function(val) {
-    this.refresh({ metric: val });
   },
   setSort: function(val) {
     this.refresh({ sort: val });
@@ -626,7 +651,7 @@ var RegionByTable = React.createClass(_.extend({
         {tables.length > 0 ? "" :
           <div className="alert alert-warning" role="alert">No data found</div>
         }
-        {this.props.menu == "rg" ?
+        {this.props.menu == "regions" ?
           tables.map(function(table) {
             return <RegionByTable.Regions key={table.name} sum={table.sumh} metric={this.props.metric}
                                       condensed={this.state.condensed} name={table.name} regions={table.regions}/>
@@ -635,7 +660,7 @@ var RegionByTable = React.createClass(_.extend({
       </div>
     )
   }
-}, tableSelectable));
+}, metricSelectable, tableSelectable));
 
 RegionByTable.Table = React.createClass({
   render: function() {
@@ -751,5 +776,9 @@ RegionByTable.Regions = React.createClass({
 });
 
 $(document).ready(function() {
-  React.render(<App/>, document.body);
+  var app = React.render(<App/>, document.body);
+  window.addEventListener('hashchange', function() {
+    var opts = parseHash();
+    app.changeMenu(opts.menu);
+  });
 })
