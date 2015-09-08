@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+if [ -z "$TMUX" ]; then
+  echo Requires tmux
+  exit 1
+fi
+
+if [ $(tmux list-panes | wc -l) -ne 1 ]; then
+  echo Too many panes already
+  exit 1
+fi
+
+tmux split-window -d -h make watch
+echo -n "Waiting for nREPL to start "
+while ! tmux capture-pane -t .1 -p | grep 'Started nREPL' > /dev/null; do
+  echo -n .
+  sleep 1
+done
+echo
+
+tmux split-window -t .1 -d make repl
+echo -n "Waiting for user prompt"
+while ! tmux capture-pane -t .1 -p | grep '^user=>' > /dev/null; do
+  echo -n .
+  sleep 1
+done
+echo
+
+tmux send-keys -t .1 "(in-ns 'hbase-region-inspector.core)" Enter
+tmux send-keys -t .1 "(reset! config (config/parse \"localhost\"))" Enter
+
