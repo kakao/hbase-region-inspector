@@ -32,21 +32,20 @@ brew install npm leiningen
 ## Development
 
 ```sh
-make js
+# For HBase 0.98 and above
+./hacking
 
-# 0.98
-make watch
-make repl
-
-# 0.94
-make watch profile=0.94
-make repl profile=0.94
+# HBase 0.94
+./hacking 0.94
 ```
 
 ## Build
 
 ```sh
-make profile=0.98
+# For HBase 0.98 and above
+make
+
+# HBase 0.94
 make profile=0.94
 ```
 

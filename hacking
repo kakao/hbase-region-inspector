@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+profile=${1:-0.98}
+
 if [ -z "$TMUX" ]; then
   echo Requires tmux
   exit 1
@@ -9,7 +11,9 @@ if [ $(tmux list-panes | wc -l) -ne 1 ]; then
   exit 1
 fi
 
-tmux split-window -d -h make watch
+tmux split-window -d -h make autotest profile=$profile
+
+tmux split-window -t .1 -d -p 80 make watch profile=$profile
 echo -n "Waiting for nREPL to start "
 while ! tmux capture-pane -t .1 -p | grep 'Started nREPL' > /dev/null; do
   echo -n .
@@ -17,8 +21,8 @@ while ! tmux capture-pane -t .1 -p | grep 'Started nREPL' > /dev/null; do
 done
 echo
 
-tmux split-window -t .1 -d make repl
-echo -n "Waiting for user prompt"
+tmux split-window -t .1 -d -p 75 make repl profile=$profile
+echo -n "Waiting for user prompt "
 while ! tmux capture-pane -t .1 -p | grep '^user=>' > /dev/null; do
   echo -n .
   sleep 1
