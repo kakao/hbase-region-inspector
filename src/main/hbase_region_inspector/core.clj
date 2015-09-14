@@ -56,6 +56,7 @@
                                    (mb val))]
       :store-file-index-size-mb ["Index"        (mb val)]
       :memstore-size-mb         ["Memstore"     (mb val)]
+      :requests-rate            ["Requests/sec" (long-fmt val)]
       :requests                 ["Requests"     (count-rate val (:requests-rate props))]
       :read-requests            ["Reads"        (count-rate val (:read-requests-rate props))]
       :write-requests           ["Writes"       (count-rate val (:write-requests-rate props))]
@@ -196,7 +197,7 @@
     ;; Build the result list
     {:servers (map #(assoc %
                            :max group-max
-                           :html (:html (servers (:name %)))) grouped)
+                           :props (servers (:name %))) grouped)
      :tables (or all-tables [])}))
 
 (defn regions-by-tables
@@ -236,7 +237,7 @@
         ;; Sorted with human-readable sum
         sorted (map #(assoc %
                             :sumh (last (format-val metric (:sum %)))
-                            :html (get-in table-summary [(:name %) :html])) sorted)]
+                            :props (get table-summary (:name %))) sorted)]
     {:all-tables all-tables
      :tables     sorted}))
 

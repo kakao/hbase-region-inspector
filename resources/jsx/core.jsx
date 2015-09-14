@@ -57,6 +57,25 @@ function fmt(val) {
   return val.toFixed(2);
 }
 
+function ratio(a, b) {
+  return b == 0 ? "" : fmt(100.0 * a / b) + " %";
+}
+
+function summarize(arr, keys) {
+  var sum = {sum: 0, max: 0};
+  _.each(keys, function(k) {
+    sum[k] = 0;
+  });
+  _.each(arr, function(e) {
+    _.each(keys, function(k) {
+      sum[k] += e.props[k];
+    });
+    sum.sum += e.sum;
+    sum.max = e.sum > sum.max ? e.sum : sum.max;
+  });
+  return sum;
+}
+
 function debug() {
   // console.log.apply(console, arguments);
 }
@@ -407,7 +426,16 @@ var RegionByServer = React.createClass(_.extend({
     debug(this.props);
     var servers = this.props.result.servers;
     var error = this.props.result.error;
-    var sum = servers.reduce(function(sum, server) { return sum + server.sum }, 0);
+    var sums = summarize(servers,
+                         ['regions',
+                          'store-files',
+                          'store-file-size-mb',
+                          'store-uncompressed-size-mb',
+                          'requests-rate',
+                          'used-heap-mb',
+                          'max-heap-mb']);
+    var sum = sums.sum;
+    servers.reduce(function(sum, server) { return sum + server.sum }, 0);
     return (
       <div>
         <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
@@ -457,6 +485,53 @@ var RegionByServer = React.createClass(_.extend({
           {servers.map(function(server, idx) {
             return <RegionByServer.Row key={server.name} index={idx} metric={this.props.metric} {...this.state} parent={this} callback={this.setTable} {...server} />
           }, this)}
+          </tbody>
+        </table>
+        <br/>
+        <hr/>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Server</th>
+              <th>Regions</th>
+              <th>Storefiles</th>
+              <th>Data size (MB)</th>
+              <th>Raw data size (MB)</th>
+              <th>Compression ratio</th>
+              <th>Requests/sec</th>
+              <th>Used heap (MB)</th>
+              <th>Max heap (MB)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {servers.map(function(server) {
+              return (
+                <tr key={"server-row-" + server.name}>
+                  <th>{server.name.replace(/\..*/, '')}</th>
+                  <td>{fmt(server.props['regions'])}</td>
+                  <td>{fmt(server.props['store-files'])}</td>
+                  <td>{fmt(server.props['store-file-size-mb'])}</td>
+                  <td>{fmt(server.props['store-uncompressed-size-mb'])}</td>
+                  <td>{ratio(server.props['store-file-size-mb'],
+                             server.props['store-uncompressed-size-mb'])}</td>
+                  <td>{fmt(server.props['requests-rate'])}</td>
+                  <td>{fmt(server.props['used-heap-mb'])}</td>
+                  <td>{fmt(server.props['max-heap-mb'])}</td>
+                </tr>
+              )
+            }, this)}
+            <tr>
+              <th><span className="label label-primary">ALL SERVERS</span></th>
+              <td>{fmt(sums['regions'])}</td>
+              <td>{fmt(sums['store-files'])}</td>
+              <td>{fmt(sums['store-file-size-mb'])}</td>
+              <td>{fmt(sums['store-uncompressed-size-mb'])}</td>
+              <td>{ratio(sums['store-file-size-mb'],
+                         sums['store-uncompressed-size-mb'])}</td>
+              <td>{fmt(sums['requests-rate'])}</td>
+              <td>{fmt(sums['used-heap-mb'])}</td>
+              <td>{fmt(sums['max-heap-mb'])}</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -539,7 +614,7 @@ RegionByServer.Row = React.createClass({
       <tr className={condensed}>
         <td className="text-muted col-xs-1 nowrap">
           <a target="_blank" href={url}>
-            <div className="mono-space extra-info-right" data-content={this.props.html}>{shortName}</div>
+            <div className="mono-space extra-info-right" data-content={this.props.props.html}>{shortName}</div>
           </a>
         </td>
         <td>
@@ -666,13 +741,18 @@ RegionByTable.Table = React.createClass({
   render: function() {
     var tables = this.props.tables;
     var metric = this.props.metric;
-    var max = this.props.tables.reduce(function(cmax, curr) {
-      return curr.sum > cmax ? curr.sum : cmax;
-    }, 0);
-    var sum = this.props.tables.reduce(function(sum, curr) {
-      return sum + curr.sum;
-    }, 0);
+    var sums = summarize(this.props.tables,
+                         ['regions',
+                          'store-files',
+                          'store-file-size-mb',
+                          'store-uncompressed-size-mb',
+                          'requests-rate',
+                          'read-requests-rate',
+                          'write-requests-rate']);
+    var max = sums.max;
+    var sum = sums.sum;
     return (
+      <div>
       <table className="table table-condensed barchart">
         <thead>
           <tr>
@@ -690,6 +770,54 @@ RegionByTable.Table = React.createClass({
           }, this)}
         </tbody>
       </table>
+      <br/>
+      <hr/>
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Regions</th>
+            <th>Storefiles</th>
+            <th>Data size (MB)</th>
+            <th>Raw data size (MB)</th>
+            <th>Compression ratio</th>
+            <th>Requests/sec</th>
+            <th>Reads/sec</th>
+            <th>Writes/sec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tables.map(function(table) {
+            return (
+              <tr key={"table-row-" + table.name}>
+                <th>{table.name}</th>
+                <td>{fmt(table.props['regions'])}</td>
+                <td>{fmt(table.props['store-files'])}</td>
+                <td>{fmt(table.props['store-file-size-mb'])}</td>
+                <td>{fmt(table.props['store-uncompressed-size-mb'])}</td>
+                <td>{ratio(table.props['store-file-size-mb'],
+                           table.props['store-uncompressed-size-mb'])}</td>
+                <td>{fmt(table.props['requests-rate'])}</td>
+                <td>{fmt(table.props['read-requests-rate'])}</td>
+                <td>{fmt(table.props['write-requests-rate'])}</td>
+              </tr>
+            )
+          }, this)}
+          <tr>
+            <th><span className="label label-primary">ALL TABLES</span></th>
+            <td>{fmt(sums['regions'])}</td>
+            <td>{fmt(sums['store-files'])}</td>
+            <td>{fmt(sums['store-file-size-mb'])}</td>
+            <td>{fmt(sums['store-uncompressed-size-mb'])}</td>
+            <td>{ratio(sums['store-file-size-mb'],
+                       sums['store-uncompressed-size-mb'])}</td>
+            <td>{fmt(sums['requests-rate'])}</td>
+            <td>{fmt(sums['read-requests-rate'])}</td>
+            <td>{fmt(sums['write-requests-rate'])}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
     );
   }
 });
@@ -700,7 +828,7 @@ RegionByTable.TableRow = React.createClass({
     return (
       <tr className={this.props.condensed ? "condensed" : ""}>
         <td className="text-muted col-xs-1 nowrap">
-          <div className="mono-space extra-info-right" data-content={this.props.html}>
+          <div className="mono-space extra-info-right" data-content={this.props.props.html}>
             {this.props.name}
           </div>
         </td>
