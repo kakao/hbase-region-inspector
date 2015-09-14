@@ -51,6 +51,9 @@ function fire() {
 }
 
 function fmt(val) {
+  if (val == null) {
+    return "";
+  }
   if (val > 10 || Math.floor(val) == val) {
     return Math.floor(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
@@ -58,17 +61,19 @@ function fmt(val) {
 }
 
 function ratio(a, b) {
-  return b == 0 ? "" : fmt(100.0 * a / b) + " %";
+  return (b == null || b == 0) ? "" : fmt(100.0 * a / b) + " %";
 }
 
 function summarize(arr, keys) {
   var sum = {sum: 0, max: 0};
   _.each(keys, function(k) {
-    sum[k] = 0;
+    sum[k] = null;
   });
   _.each(arr, function(e) {
     _.each(keys, function(k) {
-      sum[k] += e.props[k];
+      if (e.props[k] != null) {
+        sum[k] += e.props[k];
+      }
     });
     sum.sum += e.sum;
     sum.max = e.sum > sum.max ? e.sum : sum.max;
