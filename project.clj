@@ -1,11 +1,11 @@
-(def project-version "0.2.5")
+(def project-version "0.2.6")
 (def profiles [:0.94 :0.98])
 (def bins (into {} (for [profile profiles]
                      [profile (format "hbase-region-inspector-%s-%s"
                                       (name profile) project-version)])))
 (def jars (into {} (for [[k v] bins] [k (str v ".jar")])))
 
-(defproject hbase-region-inspector "0.2.5" ; Can't use ~ yet
+(defproject hbase-region-inspector "0.2.6" ; Can't use ~ yet
   :description "HBase region dashboard"
   :url "http://example.com/FIXME"
   :license {:name "MIT"}
