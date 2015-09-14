@@ -487,7 +487,6 @@ var RegionByServer = React.createClass(_.extend({
           }, this)}
           </tbody>
         </table>
-        <br/>
         <hr/>
         <table className="table table-striped">
           <thead>
@@ -770,7 +769,6 @@ RegionByTable.Table = React.createClass({
           }, this)}
         </tbody>
       </table>
-      <br/>
       <hr/>
       <table className="table table-striped">
         <thead>
