@@ -16,7 +16,6 @@ bin:
 release:
 	mkdir -p releases/
 	cp -v target/$(profile)/hbase-region-inspector-$(profile)-* releases/
-	cp -v target/$(profile)+uberjar/hbase-region-inspector-$(profile)-*.jar releases/
 
 repl:
 	lein with-profile $(profile),$(profile)-test repl :connect localhost:9999

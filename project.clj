@@ -48,6 +48,7 @@
                               [org.apache.hadoop/hadoop-minicluster "2.0.0-cdh4.7.1"]]}
    :0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
                   :uberjar-name ~(:0.94 jars)
+                  :target-path  "target/0.94"
                   :source-paths ["src/hbase-0.94"]
                   ;; lein with-profile 0.94 deps :tree
                   :dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1"
@@ -61,6 +62,7 @@
    :0.98-test {:dependencies [[org.apache.hbase/hbase-testing-util "0.98.6-cdh5.3.3"]]}
    :0.98 ^:leaky {:bin {:name ~(:0.98 bins)}
                   :uberjar-name ~(:0.98 jars)
+                  :target-path  "target/0.98"
                   :source-paths ["src/hbase-0.98"]
                   :dependencies [[org.apache.hbase/hbase-client "0.98.6-cdh5.3.3"]
                                  [org.apache.hbase/hbase-common "0.98.6-cdh5.3.3"]]}
