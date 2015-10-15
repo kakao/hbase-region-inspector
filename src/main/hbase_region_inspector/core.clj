@@ -319,6 +319,7 @@
        (util/debug (format "/ [%s]" remote))
        (render-file "public/index.html" {:zookeeper (:zookeeper @config)
                                          :interval @update-interval
+                                         :rs-port (hbase/rs-info-port @config)
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))

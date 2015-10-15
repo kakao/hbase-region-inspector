@@ -97,6 +97,10 @@
           (util/debug "Current user: " (UserGroupInformation/getCurrentUser)))
         hbc))))
 
+(defn rs-info-port
+  [conf]
+  (.getInt (build-hbase-conf conf) "hbase.regionserver.info.port" 60030))
+
 (defn connect-admin [conf]
   (HBaseAdmin. (build-hbase-conf conf)))
 
