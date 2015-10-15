@@ -7,7 +7,14 @@ var minify = require('gulp-minify-css');
 var mainBowerFiles = require('main-bower-files');
 
 gulp.task('default', function() {
-  var mainFiles = mainBowerFiles();
+  var mainFiles = mainBowerFiles({
+    "overrides": {
+      "react": {
+        "main": ["**/react.js", "**/react-dom.js"]
+      }
+    }
+  });
+  console.log(mainFiles);
 
   gulp.src(mainFiles)
     .pipe(filter('**/*.js'))

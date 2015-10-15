@@ -227,13 +227,13 @@ function refreshApp(menu, opts) {
         debug("already updated: " + currentVersion + "/" + refresh.version);
         return;
       }
-      React.render(<App {...opts} menu={menu} result={result}/>, document.body);
+      ReactDOM.render(<App {...opts} menu={menu} result={result}/>, document.getElementById('content'));
       startDrag();
       startDrop(function() { refreshApp(menu, opts) });
     },
     error: function(jqXHR, text, error) {
       debug(jqXHR, text, error);
-      React.render(<App {...opts} menu="error" error={error}/>, document.body);
+      ReactDOM.render(<App {...opts} menu="error" error={error}/>, document.getElementById('content'));
       schedule(function() { refreshApp(menu, opts); });
     },
     timeout: 10000
@@ -449,10 +449,10 @@ var RegionByServer = React.createClass(_.extend({
             <label className="control-label col-xs-1">Sort</label>
             <div className="col-xs-11">
               <label className="radio-inline col-xs-1">
-                <input type="radio" name="sortOptions" value="metric" defaultChecked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}>Region</input>
+                <input type="radio" name="sortOptions" value="metric" defaultChecked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}/>Region
               </label>
               <label className="radio-inline">
-                <input type="radio" name="sortOptions" value="table" defaultChecked={this.props.sort == "table"} onChange={this.setSort.bind(this, "table")}>Table</input>
+                <input type="radio" name="sortOptions" value="table" defaultChecked={this.props.sort == "table"} onChange={this.setSort.bind(this, "table")}/>Table
               </label>
             </div>
           </div>
@@ -461,10 +461,10 @@ var RegionByServer = React.createClass(_.extend({
             <label className="control-label col-xs-1">Layout</label>
             <div className="col-xs-11">
               <label className="radio-inline col-xs-1">
-                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
+                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}/>Normal
               </label>
               <label className="radio-inline">
-                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}>Condensed</input>
+                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}/>Condensed
               </label>
             </div>
           </div>
@@ -705,10 +705,10 @@ var RegionByTable = React.createClass(_.extend({
             <label className="control-label col-xs-1">Sort</label>
             <div className="col-xs-11">
               <label className="radio-inline col-xs-1">
-                <input type="radio" name="sortOptions" value="table" checked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}>Value</input>
+                <input type="radio" name="sortOptions" value="table" checked={this.props.sort == "metric"} onChange={this.setSort.bind(this, "metric")}/>Value
               </label>
               <label className="radio-inline">
-                <input type="radio" name="sortOptions" value="metric" checked={this.props.sort == "start-key"} onChange={this.setSort.bind(this, "start-key")}>Start key</input>
+                <input type="radio" name="sortOptions" value="metric" checked={this.props.sort == "start-key"} onChange={this.setSort.bind(this, "start-key")}/>Start key
               </label>
             </div>
           </div>
@@ -717,10 +717,10 @@ var RegionByTable = React.createClass(_.extend({
             <label className="control-label col-xs-1">Layout</label>
             <div className="col-xs-11">
               <label className="radio-inline col-xs-1">
-                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}>Normal</input>
+                <input type="radio" name="layoutOptions" value="normal" defaultChecked={!this.state.condensed} onChange={this.setLayout.bind(this, false)}/>Normal
               </label>
               <label className="radio-inline">
-                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}>Condensed</input>
+                <input type="radio" name="layoutOptions" value="condensed" defaultChecked={this.state.condensed} onChange={this.setLayout.bind(this, true)}/>Condensed
               </label>
             </div>
           </div>
@@ -907,7 +907,7 @@ RegionByTable.Regions = React.createClass({
 });
 
 $(document).ready(function() {
-  var app = React.render(<App/>, document.body);
+  var app = ReactDOM.render(<App/>, document.getElementById('content'));
   window.addEventListener('hashchange', function() {
     var opts = parseHash();
     app.changeMenu(opts.menu);
