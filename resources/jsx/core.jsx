@@ -499,8 +499,8 @@ var RegionByServer = React.createClass(_.extend({
               <th>Server</th>
               <th>Regions</th>
               <th>Storefiles</th>
+              <th>Compressed (MB)</th>
               <th>Data size (MB)</th>
-              <th>Raw data size (MB)</th>
               <th>Compression ratio</th>
               <th>Requests/sec</th>
               <th>Used heap (MB)</th>
@@ -781,8 +781,8 @@ RegionByTable.Table = React.createClass({
             <th>Table</th>
             <th>Regions</th>
             <th>Storefiles</th>
+            <th>Compressed (MB)</th>
             <th>Data size (MB)</th>
-            <th>Raw data size (MB)</th>
             <th>Compression ratio</th>
             <th>Requests/sec</th>
             <th>Reads/sec</th>
