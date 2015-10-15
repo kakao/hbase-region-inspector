@@ -40,14 +40,15 @@
   config)
 
 (defn- parse-pairs [string]
-  (into {}
-        (for [[_ k v1 v2] (re-seq #"(\S+)=(?:\"([^\"]+)\"|(\S+))" string)]
-          [(keyword k)
-           (let [v (or v1 v2)]
-             (case (str/lower-case v)
-               "true" true
-               "false" false
-               v))])))
+  (into
+    {}
+    (for [[_ k v1 v2] (re-seq #"(\S+)=(?:\"([^\"]+)\"|(\S+))" string)]
+      [(keyword k)
+       (let [v (or v1 v2)]
+         (condp re-find v
+           #"^true;?$"  true
+           #"^false;?$" false
+           v))])))
 
 (defn- parse-jaas [path]
   (let [content (slurp path)
@@ -69,10 +70,9 @@
   (let [locate (partial util/locate-file (.getParent file))
         rdr    (io/reader file)
         props  (into {} (doto (Properties.) (.load rdr)))
-        {sys true hb false :as all}
-        (into {}
-              (for [[k v] (group-by #(.startsWith (key %) "java.") props)]
-                [k (into {} v)]))
+        [sys hb] (map #(into {} %)
+                      ((juxt filter remove)
+                       #(.startsWith (key %) "java.") props))
         sys (into {}
                   (for [[k v] sys]
                     [k (if (#{"java.security.auth.login.config"
@@ -84,7 +84,7 @@
 
 (defn- build-config [quorum]
   (let [[quorum port] (str/split quorum #"/")]
-    {:krb? false
+    {:krb?  false
      :hbase (merge {"hbase.zookeeper.quorum" quorum}
                    (if port
                      {"hbase.zookeeper.property.clientPort" port}))}))

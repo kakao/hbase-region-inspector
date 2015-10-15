@@ -40,7 +40,8 @@
 
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
-  {:0.94-test {:dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1" :classifier "tests"]
+  {:test {:resource-paths ["test/resources"]}
+   :0.94-test {:dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1" :classifier "tests"]
                               ;; DistributedFileSystem
                               [org.apache.hadoop/hadoop-hdfs "2.0.0-cdh4.7.1"]
                               ;; MiniDFSCluster
