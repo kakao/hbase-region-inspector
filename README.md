@@ -3,11 +3,11 @@
 ## Usage
 
 ```
-usage: hbase-region-inspector [--read-only --system] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
-                                                     └ CONFIG_FILE     ┘
+usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
+                                        └ CONFIG_FILE     ┘
   Options
     --read-only   Disable drag-and-drop interface
-    --system      Show system tables
+    --no-system   Hide system tables
 ```
 
 To access a secured HBase cluster, you have to prepare the following
