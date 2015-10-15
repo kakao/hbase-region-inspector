@@ -525,16 +525,16 @@ var RegionByServer = React.createClass(_.extend({
               )
             }, this)}
             <tr>
-              <th><span className="label label-primary">ALL SERVERS</span></th>
-              <td>{fmt(sums['regions'])}</td>
-              <td>{fmt(sums['store-files'])}</td>
-              <td>{fmt(sums['store-file-size-mb'])}</td>
-              <td>{fmt(sums['store-uncompressed-size-mb'])}</td>
-              <td>{ratio(sums['store-file-size-mb'],
-                         sums['store-uncompressed-size-mb'])}</td>
-              <td>{fmt(sums['requests-rate'])}</td>
-              <td>{fmt(sums['used-heap-mb'])}</td>
-              <td>{fmt(sums['max-heap-mb'])}</td>
+              <th><span className="mark"><em>ALL SERVERS ({servers.length})</em></span></th>
+              <td><em>{fmt(sums['regions'])}</em></td>
+              <td><em>{fmt(sums['store-files'])}</em></td>
+              <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
+              <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
+              <td><em>{ratio(sums['store-file-size-mb'],
+                             sums['store-uncompressed-size-mb'])}</em></td>
+              <td><em>{fmt(sums['requests-rate'])}</em></td>
+              <td><em>{fmt(sums['used-heap-mb'])}</em></td>
+              <td><em>{fmt(sums['max-heap-mb'])}</em></td>
             </tr>
           </tbody>
         </table>
@@ -807,16 +807,16 @@ RegionByTable.Table = React.createClass({
             )
           }, this)}
           <tr>
-            <th><span className="label label-primary">ALL TABLES</span></th>
-            <td>{fmt(sums['regions'])}</td>
-            <td>{fmt(sums['store-files'])}</td>
-            <td>{fmt(sums['store-file-size-mb'])}</td>
-            <td>{fmt(sums['store-uncompressed-size-mb'])}</td>
-            <td>{ratio(sums['store-file-size-mb'],
-                       sums['store-uncompressed-size-mb'])}</td>
-            <td>{fmt(sums['requests-rate'])}</td>
-            <td>{fmt(sums['read-requests-rate'])}</td>
-            <td>{fmt(sums['write-requests-rate'])}</td>
+            <th><span className="mark"><em>ALL TABLES ({tables.length})</em></span></th>
+            <td><em>{fmt(sums['regions'])}</em></td>
+            <td><em>{fmt(sums['store-files'])}</em></td>
+            <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
+            <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
+            <td><em>{ratio(sums['store-file-size-mb'],
+                           sums['store-uncompressed-size-mb'])}</em></td>
+            <td><em>{fmt(sums['requests-rate'])}</em></td>
+            <td><em>{fmt(sums['read-requests-rate'])}</em></td>
+            <td><em>{fmt(sums['write-requests-rate'])}</em></td>
           </tr>
         </tbody>
       </table>
