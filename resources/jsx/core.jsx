@@ -61,7 +61,7 @@ function fmt(val) {
 }
 
 function ratio(a, b) {
-  return (b == null || b == 0) ? "" : fmt(100.0 * a / b) + " %";
+  return (b == null || b == 0) ? "" : fmt(1.0 * a / b);
 }
 
 function summarize(arr, keys) {
@@ -516,8 +516,8 @@ var RegionByServer = React.createClass(_.extend({
                   <td>{fmt(server.props['store-files'])}</td>
                   <td>{fmt(server.props['store-file-size-mb'])}</td>
                   <td>{fmt(server.props['store-uncompressed-size-mb'])}</td>
-                  <td>{ratio(server.props['store-file-size-mb'],
-                             server.props['store-uncompressed-size-mb'])}</td>
+                  <td>{ratio(server.props['store-uncompressed-size-mb'],
+                             server.props['store-file-size-mb'])}</td>
                   <td>{fmt(server.props['requests-rate'])}</td>
                   <td>{fmt(server.props['used-heap-mb'])}</td>
                   <td>{fmt(server.props['max-heap-mb'])}</td>
@@ -530,8 +530,8 @@ var RegionByServer = React.createClass(_.extend({
               <td><em>{fmt(sums['store-files'])}</em></td>
               <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
               <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
-              <td><em>{ratio(sums['store-file-size-mb'],
-                             sums['store-uncompressed-size-mb'])}</em></td>
+              <td><em>{ratio(sums['store-uncompressed-size-mb'],
+                             sums['store-file-size-mb'])}</em></td>
               <td><em>{fmt(sums['requests-rate'])}</em></td>
               <td><em>{fmt(sums['used-heap-mb'])}</em></td>
               <td><em>{fmt(sums['max-heap-mb'])}</em></td>
@@ -798,8 +798,8 @@ RegionByTable.Table = React.createClass({
                 <td>{fmt(table.props['store-files'])}</td>
                 <td>{fmt(table.props['store-file-size-mb'])}</td>
                 <td>{fmt(table.props['store-uncompressed-size-mb'])}</td>
-                <td>{ratio(table.props['store-file-size-mb'],
-                           table.props['store-uncompressed-size-mb'])}</td>
+                <td>{ratio(table.props['store-uncompressed-size-mb'],
+                           table.props['store-file-size-mb'])}</td>
                 <td>{fmt(table.props['requests-rate'])}</td>
                 <td>{fmt(table.props['read-requests-rate'])}</td>
                 <td>{fmt(table.props['write-requests-rate'])}</td>
@@ -812,8 +812,8 @@ RegionByTable.Table = React.createClass({
             <td><em>{fmt(sums['store-files'])}</em></td>
             <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
             <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
-            <td><em>{ratio(sums['store-file-size-mb'],
-                           sums['store-uncompressed-size-mb'])}</em></td>
+            <td><em>{ratio(sums['store-uncompressed-size-mb'],
+                           sums['store-file-size-mb'])}</em></td>
             <td><em>{fmt(sums['requests-rate'])}</em></td>
             <td><em>{fmt(sums['read-requests-rate'])}</em></td>
             <td><em>{fmt(sums['write-requests-rate'])}</em></td>
