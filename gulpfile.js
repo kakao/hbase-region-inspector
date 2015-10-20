@@ -1,33 +1,20 @@
 // http://engineroom.teamwork.com/hassle-free-third-party-dependencies/
 var gulp = require('gulp');
 var concat = require('gulp-concat');
-var filter = require('gulp-filter');
-var uglify = require('gulp-uglify');
 var minify = require('gulp-minify-css');
-var mainBowerFiles = require('main-bower-files');
+var base = 'bower_components/**/'
 
 gulp.task('default', function() {
-  var mainFiles = mainBowerFiles({
-    "overrides": {
-      "react": {
-        "main": ["**/react.js", "**/react-dom.js"]
-      }
-    }
-  });
-  console.log(mainFiles);
-
-  gulp.src(mainFiles)
-    .pipe(filter('**/*.js'))
+  gulp.src(['dist/jquery', 'jquery-ui', 'react', 'react-dom', 'husl', 'spin',
+            'bootstrap'].map(function(n) { return base + n + '.min.js' })
+           .concat([base + 'underscore-min.js']))
     .pipe(concat('vendor.js'))
-    .pipe(uglify())
     .pipe(gulp.dest('resources/public/js/'))
 
-  gulp.src(mainFiles)
-    .pipe(filter('**/*.css'))
+  gulp.src(base + '*.min.css')
     .pipe(minify())
     .pipe(gulp.dest('resources/public/css/'))
 
-  gulp.src(mainFiles)
-    .pipe(filter('**/glyphicons*'))
+  gulp.src(base + 'glyphicons*')
     .pipe(gulp.dest('resources/public/fonts/'))
 });

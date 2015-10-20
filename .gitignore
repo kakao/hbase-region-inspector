@@ -11,11 +11,9 @@ pom.xml.asc
 .hg/
 node_modules
 bower_components
-resources/public/js/core.js
+resources/public/js/*.js
 resources/public/js/.module-cache
 resources/public/css/bootstrap.css
 resources/public/fonts
-resources/public/images
 releases
-vendor.js
 doc
