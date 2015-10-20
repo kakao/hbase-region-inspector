@@ -112,8 +112,22 @@ tr.condensed .metric-value {
   transition:         none;
 }
 
-.nav > .disabled > a.refresh_msg:hover {
+.nav-tabs > .navbar-right.disabled {
+  margin-right: 0px;
+}
+
+.nav > .navbar-right.disabled > a:hover {
   cursor: pointer;
+}
+
+.navbar-right.disabled > a.refresh_msg {
+  padding-left:  10px;
+  padding-right: 10px;
+}
+
+.navbar-right.disabled > a.resume-btn {
+  padding-left:  5px;
+  padding-right: 5px;
 }
 
 body {

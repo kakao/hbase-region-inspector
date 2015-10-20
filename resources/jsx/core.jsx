@@ -50,6 +50,17 @@ function fire() {
   refresh.job();
 }
 
+function toggle_refresh() {
+  var t = $(".resume-btn span");
+  if (refresh.paused) {
+    refresh.resume();
+    t.removeClass("glyphicon-play").addClass("glyphicon-pause");
+  } else {
+    refresh.pause();
+    t.removeClass("glyphicon-pause").addClass("glyphicon-play");
+  }
+}
+
 function fmt(val) {
   if (val == null) {
     return "";
@@ -564,7 +575,12 @@ var MetricsTab = React.createClass({
                   </li>
                 );
             }, this)}
-            <li className="pull-right disabled">
+            <li className="navbar-right disabled">
+              <a className="resume-btn" href="javascript:void(0)" onClick={toggle_refresh}>
+                <span className={"glyphicon glyphicon-" + (refresh.paused ? "play" : "pause")} aria-hidden="true"></span>
+              </a>
+            </li>
+            <li className="navbar-right disabled">
               <a className="refresh_msg" href="javascript:void(0)" onClick={fire}>
               </a>
             </li>
