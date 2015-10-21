@@ -239,8 +239,10 @@ function refreshApp(menu, opts) {
         return;
       }
       ReactDOM.render(<App {...opts} menu={menu} result={result}/>, document.getElementById('content'));
-      startDrag();
-      startDrop(function() { refreshApp(menu, opts) });
+      if (_admin) {
+        startDrag();
+        startDrop(function() { refreshApp(menu, opts) });
+      }
     },
     error: function(jqXHR, text, error) {
       debug(jqXHR, text, error);

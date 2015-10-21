@@ -19,7 +19,7 @@
 (defonce config (atom {}))
 
 ;;; Whether we should allow region relocation or not
-(defonce read-only? (atom false))
+(defonce read-only? (atom true))
 
 ;;; Whether we should include system regions or not
 (defonce with-system? (atom true))
@@ -321,6 +321,7 @@
        (render-file "public/index.html" {:zookeeper (:zookeeper @config)
                                          :interval @update-interval
                                          :rs-port (hbase/rs-info-port @config)
+                                         :admin (not @read-only?)
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))
@@ -424,14 +425,14 @@
       ["usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]"
        "                                        └ CONFIG_FILE     ┘"
        "  Options"
-       "   --read-only   Disable drag-and-drop interface"
+       "   --admin       Enable drag-and-drop interface"
        "   --no-system   Hide system tables"]))
   (System/exit 1))
 
 (defn -main [& args]
   (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
-    (reset! read-only? (contains? opts :read-only))
+    (reset! read-only?   (not (contains? opts :admin)))
     (reset! with-system? (not (contains? opts :no-system)))
     (when-not (<= 2 (count args) 3) (exit "invalid number of arguments"))
     (try
