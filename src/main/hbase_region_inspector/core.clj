@@ -5,6 +5,7 @@
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-response]]
+            [ring.middleware.gzip :refer [wrap-gzip]]
             [compojure.core :refer [defroutes GET PUT routes wrap-routes]]
             [compojure.route :as route]
             [hiccup.core :as h]
@@ -392,6 +393,11 @@
           (-> api-routes
               (wrap-routes wrap-defaults api-defaults)
               wrap-json-response
+
+              ;; Response middlewares
+              wrap-gzip
+
+              ;; Outermost shell
               wrap-exception)
           (route/not-found "404")))
 

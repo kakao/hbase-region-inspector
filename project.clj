@@ -17,6 +17,7 @@
                  [ring/ring-jetty-adapter "1.4.0"]
                  [ring/ring-defaults "0.1.5"]
                  [ring/ring-json "0.3.1"]
+                 [amalloy/ring-gzip-middleware "0.1.3"]
                  [compojure "1.3.4"]
                  [hiccup "1.0.5"]
                  [selmer "0.8.2"]]
