@@ -597,7 +597,7 @@ var TableButtons = React.createClass({
     return (
       <div className="form-group">
         <label className="control-label col-xs-1">Tables</label>
-        <div className="col-xs-11">
+        <div id="table-buttons" className="col-xs-11">
           <h5>
             {this.props.allTables.map(function(name) {
               var allVisible = this.props.tables.length == 0;
