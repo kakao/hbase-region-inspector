@@ -1,10 +1,10 @@
 (ns hbase-region-inspector.core
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [cheshire.core :as json]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.util.response :refer [response content-type resource-response]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
-            [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [compojure.core :refer [defroutes GET PUT routes wrap-routes]]
             [compojure.route :as route]
@@ -25,7 +25,7 @@
 (defonce with-system? (atom true))
 
 ;;; Cache the result of previous inspection
-(defonce cached (atom {:updated-at nil :regions []}))
+(defonce cached (atom {:updated-at nil :regions [] :response {}}))
 
 ;;; Inspection interval
 (defonce update-interval (atom 10))
@@ -298,9 +298,10 @@
         servers (into {} (for [[k v] servers]
                            [k (assoc v :html (build-server-popover v))]))]
     (reset! cached {:updated-at now
-                    :regions new-regions
-                    :servers servers
-                    :tables  (group-by-tables new-regions)})))
+                    :regions    new-regions
+                    :servers    servers
+                    :tables     (group-by-tables new-regions)
+                    :response   {}})))
 
 (defn start-periodic-updater!
   "Starts a thread that periodically runs update-regions!"
@@ -313,6 +314,21 @@
         (catch Exception e
           (util/error e)))
       (recur))))
+
+(defn json-response
+  [data]
+  (-> data json/generate-string response))
+
+(defmacro cached-json-response
+  [[& keys] & forms]
+  (let [keys (vec keys)]
+    `(if-let [body# (get-in @cached [:response ~keys])]
+       (do
+         (util/debug (format "Returning cached JSON [%s]" (str ~keys)))
+         (response body#))
+       (let [json# (json/generate-string (do ~@forms))]
+         (swap! cached #(assoc-in % [:response ~keys] json#))
+         (response json#)))))
 
 ;;; Compojure route for web app
 (defroutes app-routes
@@ -337,7 +353,7 @@
        (util/debug (format "server_regions.json [%s]" remote))
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
-         (response
+         (cached-json-response ["server" sort metric tables]
            (regions-by-servers (merge (select-keys   @cached  [:regions :servers])
                                       {:metric       (keyword metric)
                                        :sort         (keyword sort)
@@ -351,7 +367,7 @@
        (util/debug (format "table_regions.json [%s]" remote))
        (let [tables (get params "tables[]" [])
              tables (if (instance? String tables) [tables] tables)]
-         (response
+         (cached-json-response ["table" sort metric tables]
            (regions-by-tables {:regions       (:regions @cached)
                                :table-summary (:tables @cached)
                                :metric        (keyword metric)
@@ -377,7 +393,7 @@
                    (recur (dec tries) "Region not yet moved")
                    (util/info "Region is moved")))))))
        (update-regions!)
-       (response {})))
+       (json-response {})))
 
 (defn wrap-exception [handler]
   (fn [request]
@@ -393,7 +409,6 @@
               (wrap-routes wrap-defaults site-defaults))
           (-> api-routes
               (wrap-routes wrap-defaults api-defaults)
-              wrap-json-response
 
               ;; Response middlewares
               wrap-gzip
