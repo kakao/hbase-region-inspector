@@ -6,7 +6,7 @@
 usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
                                         └ CONFIG_FILE     ┘
   Options
-    --read-only   Disable drag-and-drop interface
+    --admin       Enable drag-and-drop interface
     --no-system   Hide system tables
 ```
 
