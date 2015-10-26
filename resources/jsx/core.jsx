@@ -291,13 +291,19 @@ var App = React.createClass({
     }
     enablePopover();
   },
-  changeMenu: function(menu) {
-    var opts = {sort: menu == "regions" ? "start-key" : "metric", tables: _tables};
+  changeMenu: function() {
     var vals = window.location.hash.split("#");
+    var menu = vals[1];
+    var opts = {
+      sort:   this.props.menu == menu ?
+                this.props.sort :
+                  (menu == "regions" ? "start-key" : "metric"),
+      metric: this.props.metric,
+      tables: _tables
+    }
     if (vals.length > 2) {
       opts.metric = vals[2];
     }
-    window.location.hash = "#" + menu + (vals.length > 2 ? "#" + vals[2] : "");
     refreshApp(menu, opts);
   },
   render: function() {
@@ -310,20 +316,20 @@ var App = React.createClass({
               <a className="navbar-brand" href="/">
                 <span className="glyphicon glyphicon-align-left" aria-hidden="true"></span>
               </a>
-              <a className="navbar-brand" href="javascript:void(0)" onClick={this.changeMenu.bind(this, "servers")}>
+              <a className="navbar-brand" href="#servers">
                 hbase-region-inspector
               </a>
             </div>
             <div className="collapse navbar-collapse">
               <ul className="nav navbar-nav">
                 <li className={this.props.menu == "servers" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "servers")}>Servers</a>
+                  <a href="#servers">Servers</a>
                 </li>
                 <li className={this.props.menu == "tables" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "tables")}>Tables</a>
+                  <a href="#tables">Tables</a>
                 </li>
                 <li className={this.props.menu == "regions" ? "active" : ""}>
-                  <a href="javascript:void(0)" onClick={this.changeMenu.bind(this, "regions")}>Regions</a>
+                  <a href="#regions">Regions</a>
                 </li>
               </ul>
 
@@ -386,13 +392,6 @@ var tableSelectable = {
   }
 };
 
-var metricSelectable = {
-  setMetric: function(val) {
-    window.location.hash = "#" + this.props.menu + "#" + val;
-    this.refresh({ metric: val });
-  }
-}
-
 var RegionByServer = React.createClass(_.extend({
   getDefaultProps: function() {
     var opts = parseHash();
@@ -400,6 +399,7 @@ var RegionByServer = React.createClass(_.extend({
       tables: [],
       sort:   opts.sort,
       metric: opts.metric,
+      menu:   opts.menu,
       result: null
     }
   },
@@ -456,7 +456,7 @@ var RegionByServer = React.createClass(_.extend({
     servers.reduce(function(sum, server) { return sum + server.sum }, 0);
     return (
       <div>
-        <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
+        <MetricsTab menu={this.props.menu} metric={this.props.metric} parent={this}/>
         <form className="form-horizontal">
           <div className="form-group">
             <label className="control-label col-xs-1">Sort</label>
@@ -554,7 +554,7 @@ var RegionByServer = React.createClass(_.extend({
       </div>
     )
   }
-}, metricSelectable, tableSelectable));
+}, tableSelectable));
 
 var MetricsTab = React.createClass({
   render: function() {
@@ -573,7 +573,7 @@ var MetricsTab = React.createClass({
               ["memstore-size-mb",    "Memstore"]].map(function(pair) {
                 return (
                   <li key={"rs-tab-metric-" + pair[0]} role="presentation" className={pair[0] == this.props.metric ? "active" : ""}>
-                    <a href="javascript:void(0)" onClick={this.props.callback.bind(this.props.parent, pair[0])}>{pair[1]}</a>
+                    <a href={"#" + this.props.menu + "#" + pair[0]}>{pair[1]}</a>
                   </li>
                 );
             }, this)}
@@ -717,7 +717,7 @@ var RegionByTable = React.createClass(_.extend({
     var tables = this.props.result.tables;
     return (
       <div>
-        <MetricsTab metric={this.props.metric} parent={this} callback={this.setMetric}/>
+        <MetricsTab menu={this.props.menu} metric={this.props.metric} parent={this}/>
         <form className="form-horizontal">
           <div className="form-group">
             <label className="control-label col-xs-1">Sort</label>
@@ -757,7 +757,7 @@ var RegionByTable = React.createClass(_.extend({
       </div>
     )
   }
-}, metricSelectable, tableSelectable));
+}, tableSelectable));
 
 RegionByTable.Table = React.createClass({
   render: function() {
@@ -927,7 +927,6 @@ RegionByTable.Regions = React.createClass({
 $(document).ready(function() {
   var app = ReactDOM.render(<App/>, document.getElementById('content'));
   window.addEventListener('hashchange', function() {
-    var opts = parseHash();
-    app.changeMenu(opts.menu);
+    app.changeMenu();
   });
 })
