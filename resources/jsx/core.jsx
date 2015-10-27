@@ -928,6 +928,7 @@ RegionByTable.Regions = React.createClass({
 $(document).ready(function() {
   var app = ReactDOM.render(<App/>, document.getElementById('content'));
   window.addEventListener('hashchange', function() {
+    $("table").fadeTo(100, 0.5);
     app.changeMenu();
   });
 })
