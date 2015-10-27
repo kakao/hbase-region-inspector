@@ -1,4 +1,4 @@
-profile?=0.98
+profile?=1.0
 
 all: build release
 

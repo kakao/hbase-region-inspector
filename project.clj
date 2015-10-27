@@ -1,11 +1,10 @@
 (def project-version "0.3.1")
-(def profiles [:0.94 :0.98])
-(def bins (into {} (for [profile profiles]
+(def bins (into {} (for [profile [:cdh4 :1.0]]
                      [profile (format "hbase-region-inspector-%s-%s"
                                       (name profile) project-version)])))
 (def jars (into {} (for [[k v] bins] [k (str v ".jar")])))
 
-(defproject hbase-region-inspector "0.3.1" ; Can't use ~ yet
+(defproject hbase-region-inspector project-version
   :description "HBase region dashboard"
   :url "http://example.com/FIXME"
   :license {:name "MIT"}
@@ -42,16 +41,16 @@
   ;; https://github.com/technomancy/leiningen/issues/1718
   :profiles
   {:test {:resource-paths ["test/resources"]}
-   :0.94-test {:dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1" :classifier "tests"]
+   :cdh4-test {:dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1" :classifier "tests"]
                               ;; DistributedFileSystem
                               [org.apache.hadoop/hadoop-hdfs "2.0.0-cdh4.7.1"]
                               ;; MiniDFSCluster
                               [org.apache.hadoop/hadoop-minicluster "2.0.0-cdh4.7.1"]]}
-   :0.94 ^:leaky {:bin {:name ~(:0.94 bins)}
-                  :uberjar-name ~(:0.94 jars)
-                  :target-path  "target/0.94"
-                  :source-paths ["src/hbase-0.94"]
-                  ;; lein with-profile 0.94 deps :tree
+   :cdh4 ^:leaky {:bin {:name ~(:cdh4 bins)}
+                  :uberjar-name ~(:cdh4 jars)
+                  :target-path  "target/cdh4"
+                  :source-paths ["src/hbase-cdh4"]
+                  ;; lein with-profile cdh4 deps :tree
                   :dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1"
                                   :exclusions
                                   [javax.xml.bind/jaxb-api org.slf4j/slf4j-api org.slf4j/slf4j-log4j12]]
@@ -60,11 +59,11 @@
                                   [javax.xml.bind/jaxb-api org.slf4j/slf4j-api org.slf4j/slf4j-log4j12]]
                                  [org.slf4j/slf4j-api "1.7.12"]
                                  [org.slf4j/slf4j-log4j12 "1.7.12"]]}
-   :0.98-test {:dependencies [[org.apache.hbase/hbase-testing-util "0.98.6-cdh5.3.3"]]}
-   :0.98 ^:leaky {:bin {:name ~(:0.98 bins)}
-                  :uberjar-name ~(:0.98 jars)
-                  :target-path  "target/0.98"
-                  :source-paths ["src/hbase-0.98"]
-                  :dependencies [[org.apache.hbase/hbase-client "0.98.6-cdh5.3.3"]
-                                 [org.apache.hbase/hbase-common "0.98.6-cdh5.3.3"]]}
+   :1.0-test {:dependencies [[org.apache.hbase/hbase-testing-util "1.0.0"]]}
+   :1.0 ^:leaky {:bin {:name ~(:1.0 bins)}
+                  :uberjar-name ~(:1.0 jars)
+                  :target-path  "target/1.0"
+                  :source-paths ["src/hbase-1.0"]
+                  :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
+                                 [org.apache.hbase/hbase-common "1.0.0"]]}
    :uberjar {:aot :all}})

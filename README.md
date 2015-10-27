@@ -35,8 +35,8 @@ brew install npm leiningen
 # For HBase 0.98 and above
 ./hacking
 
-# HBase 0.94
-./hacking 0.94
+# HBase 0.94 (CDH4)
+./hacking cdh4
 ```
 
 ## Build
@@ -45,8 +45,8 @@ brew install npm leiningen
 # For HBase 0.98 and above
 make
 
-# HBase 0.94
-make profile=0.94
+# HBase 0.94 (CDH4)
+make profile=cdh4
 ```
 
 ## License
