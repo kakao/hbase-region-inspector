@@ -330,11 +330,17 @@
          (swap! cached #(assoc-in % [:response ~keys] json#))
          (response json#)))))
 
+(defn strip-zookeeper-quorum
+  [zk]
+  (->> (str/split zk #",")
+       (map #(first (str/split % #"[:\.]")))
+       (str/join ",")))
+
 ;;; Compojure route for web app
 (defroutes app-routes
   (GET "/" {remote :remote-addr}
        (util/debug (format "/ [%s]" remote))
-       (render-file "public/index.html" {:zookeeper (:zookeeper @config)
+       (render-file "public/index.html" {:zookeeper (strip-zookeeper-quorum (:zookeeper @config))
                                          :interval @update-interval
                                          :rs-port (hbase/rs-info-port @config)
                                          :admin (not @read-only?)
