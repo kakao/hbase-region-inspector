@@ -30,6 +30,7 @@ function colorFor(table) {
 }
 
 function schedule(job) {
+  clearTimeout(refresh.timeout);
   refresh.job = job;
   refresh.ticks = 0;
   var tick = function() {
