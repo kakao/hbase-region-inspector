@@ -9,6 +9,10 @@ var refresh = {
   resume: function() {
     this.paused = false;
   },
+  redraw: function() {
+    var sec = refresh.interval - refresh.ticks;
+    $(".refresh_msg").text("Refresh in " + sec + " second" + (sec > 1 ? "s" : ""));
+  },
   job: null,
   timeout: null
 };
@@ -27,15 +31,12 @@ function colorFor(table) {
 
 function schedule(job) {
   refresh.job = job;
+  refresh.ticks = 0;
   var tick = function() {
+    refresh.redraw();
     if (refresh.ticks == refresh.interval) {
-      refresh.ticks = 0;
       job();
     } else {
-      var sec = refresh.interval - refresh.ticks;
-      if (sec > 0) {
-        $(".refresh_msg").text("Refresh in " + sec + " second" + (sec > 1 ? "s" : ""));
-      }
       if (!refresh.paused) {
         refresh.ticks++;
       }
@@ -46,7 +47,6 @@ function schedule(job) {
 }
 
 function fire() {
-  refresh.ticks = 0;
   refresh.job();
 }
 
