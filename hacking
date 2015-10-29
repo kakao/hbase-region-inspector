@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-profile=${1:-0.98}
+profile=${1:-1.0}
 
 if [ -z "$TMUX" ]; then
   echo Requires tmux
