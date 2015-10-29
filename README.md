@@ -1,5 +1,7 @@
 # hbase-region-inspector
 
+![](screenshot/hbase-region-inspector.png)
+
 ## Usage
 
 ```
