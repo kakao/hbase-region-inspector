@@ -1,7 +1,7 @@
 // http://engineroom.teamwork.com/hassle-free-third-party-dependencies/
 var gulp = require('gulp');
 var concat = require('gulp-concat');
-var minify = require('gulp-minify-css');
+var rename = require('gulp-rename');
 var base = 'bower_components/**/'
 
 gulp.task('default', function() {
@@ -11,10 +11,17 @@ gulp.task('default', function() {
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('resources/public/js/'))
 
-  gulp.src(base + '*.min.css')
-    .pipe(minify())
+  gulp.src(base + 'bootstrap.min.css')
+    .pipe(rename(function(path) {
+      path.dirname = "";
+      return path;
+    }))
     .pipe(gulp.dest('resources/public/css/'))
 
-  gulp.src(base + 'glyphicons*')
+  gulp.src(base + 'glyphicons-halflings*')
+    .pipe(rename(function(path) {
+      path.dirname = "";
+      return path;
+    }))
     .pipe(gulp.dest('resources/public/fonts/'))
 });
