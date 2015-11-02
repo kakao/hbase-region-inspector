@@ -29,6 +29,11 @@ configuration files:
 
 You can find the examples in [conf-examples](conf-examples/).
 
+### Environment variables
+
+- `DEBUG` - Enable debug logs when set
+- `JVM_OPTS` - JVM options
+
 ## Development
 
 ### Prerequisites
