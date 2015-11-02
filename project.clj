@@ -22,11 +22,12 @@
                  [selmer "0.8.2"]]
   :source-paths ["src/main"]
   :target-path "target/%s"
-  :plugins [[lein-ring "0.9.4"]    ; lein ring server
-            [lein-bin "0.3.5"]     ; lein bin
-            [codox "0.8.12"]       ; lein doc
+  :plugins [[lein-ring "0.9.4"]        ; lein ring server
+            [lein-bin "0.3.5"]         ; lein bin
+            [codox "0.8.12"]           ; lein doc
             [com.jakemccrary/lein-test-refresh "0.10.0"]
-            [lein-pprint "1.1.2"]] ; lein pprint
+            [lein-pprint "1.1.2"]      ; lein pprint
+            [jonase/eastwood "0.2.1"]] ; lein eastwood
   :ring {:handler hbase-region-inspector.core/app
          :nrepl {:start? true :port 9999}}
   :bin {:jvm-opts ~(if-let [jvm-opts (or (System/getenv "JVM_OPTS")

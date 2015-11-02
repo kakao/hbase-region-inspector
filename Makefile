@@ -20,6 +20,10 @@ release:
 repl:
 	lein with-profile $(profile),$(profile)-test repl :connect localhost:9999
 
+lint:
+	lein with-profile $(profile),$(profile)-test eastwood
+	node_modules/.bin/standard resources/jsx/
+
 watch:
 	-killall -9 jsx
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
@@ -35,4 +39,4 @@ autotest:
 doc:
 	lein with-profile $(profile) doc
 
-.PHONY: all build bin release js repl watch doc test autotest
+.PHONY: all build bin release js repl lint watch doc test autotest

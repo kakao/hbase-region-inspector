@@ -11,8 +11,8 @@
           ["hbase.security.authentication"
            "hadoop.security.authentication"])))
 
-(defn- require-key [map key]
-  (if-let [val (map key)]
+(defn- require-key [a-map key]
+  (if-let [val (a-map key)]
     val
     (throw (IllegalArgumentException. (str key " not found")))))
 

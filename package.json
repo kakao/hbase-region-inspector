@@ -6,6 +6,7 @@
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
     "gulp-rename": "^1.2.2",
-    "react-tools": "^0.13.3"
+    "react-tools": "^0.13.3",
+    "standard": "^5.3.1"
   }
 }

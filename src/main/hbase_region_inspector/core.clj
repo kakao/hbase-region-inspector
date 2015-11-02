@@ -146,8 +146,8 @@
 (defn byte-buffers->str
   "Returns an updated map with start-key and end-key as strings"
   [region]
-  (reduce (fn [region key]
-            (assoc region key (hbase/byte-buffer->str (key region))))
+  (reduce (fn [region prop]
+            (assoc region prop (hbase/byte-buffer->str (prop region))))
           region
           [:start-key :end-key]))
 
