@@ -1,8 +1,13 @@
 # hbase-region-inspector
 
+A visual dashboard of HBase region statistics.
+
 ![](screenshot/hbase-region-inspector.png)
 
 ## Usage
+
+Download the executable binary that matches the version of your HBase cluster
+and start it with the following command-line arguments.
 
 ```
 usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
@@ -11,6 +16,8 @@ usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
     --admin       Enable drag-and-drop interface
     --no-system   Hide system tables
 ```
+
+### Accessing secured cluster
 
 To access a secured HBase cluster, you have to prepare the following
 configuration files:
@@ -22,16 +29,19 @@ configuration files:
 
 You can find the examples in [conf-examples](conf-examples/).
 
-## Prerequisites
+## Development
+
+### Prerequisites
 
 - [NPM](https://www.npmjs.com/)
 - [Leiningen](https://github.com/technomancy/leiningen)
 
 ```sh
+# Using Homebrew on Mac OS X
 brew install npm leiningen
 ```
 
-## Development
+### Setting up REPL on tmux panes
 
 ```sh
 # For HBase 0.98 and above
@@ -41,7 +51,7 @@ brew install npm leiningen
 ./hacking cdh4
 ```
 
-## Build
+### Build
 
 ```sh
 # For HBase 0.98 and above
