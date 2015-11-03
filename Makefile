@@ -2,7 +2,7 @@ profile?=1.0
 
 all: build release
 
-build: js bin
+build: js test lint bin
 
 js:
 	npm install
