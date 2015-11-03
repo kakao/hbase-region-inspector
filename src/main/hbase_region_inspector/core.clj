@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.core
   (:require [clojure.string :as str]
+            [clojure.set :as set]
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [ring.adapter.jetty :refer [run-jetty]]
@@ -440,10 +441,11 @@
     (util/info (format "  http://%s:%d" ip port)))
   (run-jetty app {:port port}))
 
-(defn exit
+(defn- exit
   "Prints the message and terminates the program"
-  [message]
-  (println message)
+  [message code]
+  (if (seq message)
+    (println message))
   (println
     (str/join
       "\n"
@@ -451,15 +453,19 @@
        "                                        └ CONFIG_FILE     ┘"
        "  Options"
        "   --admin       Enable drag-and-drop interface"
-       "   --no-system   Hide system tables"]))
-  (System/exit 1))
+       "   --no-system   Hide system tables"
+       "   --help        Show this message"]))
+  (System/exit code))
 
 (defn -main [& args]
   (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
+    (if-let [unknowns (seq (set/difference opts #{:help :admin :no-system}))]
+      (exit (str "unknown options: " unknowns) 1))
+    (if (:help opts) (exit "" 0))
     (reset! read-only?   (not (contains? opts :admin)))
     (reset! with-system? (not (contains? opts :no-system)))
-    (when-not (<= 2 (count args) 3) (exit "invalid number of arguments"))
+    (when-not (<= 2 (count args) 3) (exit "invalid number of arguments" 1))
     (try
       (let [[spec port interval] args
             conf (config/parse spec)
@@ -467,5 +473,5 @@
         (if interval
           (reset! update-interval (Integer/parseInt interval)))
         (bootstrap conf port true))
-      (catch NumberFormatException e (exit "invalid port")))))
+      (catch NumberFormatException e (exit "invalid port" 1)))))
 

@@ -15,6 +15,7 @@ usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
   Options
     --admin       Enable drag-and-drop interface
     --no-system   Hide system tables
+    --help        Show this message
 ```
 
 ### Accessing secured cluster
