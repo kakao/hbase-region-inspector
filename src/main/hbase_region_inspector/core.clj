@@ -186,7 +186,7 @@
         grouped (map #(assoc % :sum (reduce + (filter pos? (map metric (:regions %)))))
                      grouped)
         ;; Find the max of the sums
-        group-max (if (not-empty grouped)
+        group-max (if (seq grouped)
                     (apply max (map :sum grouped))
                     nil)]
     ;; Build the result list
