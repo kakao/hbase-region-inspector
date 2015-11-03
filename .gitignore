@@ -13,7 +13,7 @@ node_modules
 bower_components
 resources/public/js/*.js
 resources/public/js/.module-cache
-resources/public/css/bootstrap.css
+resources/public/css/bootstrap.min.css
 resources/public/fonts
 releases
 doc
