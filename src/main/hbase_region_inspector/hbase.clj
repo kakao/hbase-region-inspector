@@ -38,6 +38,8 @@
            (zipmap server-names server-loads)))))
 
 (defn collect-region-info
+  "Collects the region information. You can pass ClusterStatus object to avoid
+  repetitive creation of it."
   ([admin]
    (hbase-impl/collect-region-info admin (.getClusterStatus admin)))
   ([admin cluster-status]
@@ -50,18 +52,24 @@
     {:servers (doall (collect-server-info cluster-status))
      :regions (doall (collect-region-info admin cluster-status))}))
 
-(def bytes-comp Bytes/BYTES_COMPARATOR)
+(def bytes-comp
+  "Comparator for byte arrays"
+  Bytes/BYTES_COMPARATOR)
 
 (defn byte-buffer->str
   "Returns the string representation of a bytes array"
   [buf]
   (Bytes/toStringBinary buf))
 
-(defn- set-sys! [k v]
+(defn- set-sys!
+  "Sets system properties and prints debug log"
+  [k v]
   (util/debug (format "System/setProperty: %s => %s" k v))
   (System/setProperty k v))
 
-(defn set-krb-properties! [config]
+(defn set-krb-properties!
+  "Sets system properties for Kerberos authentication"
+  [config]
   (let [realm (-> (:hbase config)
                   (get "hbase.master.kerberos.principal")
                   (str/replace #".*@" ""))
@@ -71,6 +79,8 @@
     (set-sys! "java.security.krb5.kdc" kdc-list)))
 
 (def build-hbase-conf
+  "Builds HBaseConfiguration from the given map of configuration. The built
+  objects are cached."
   (memoize
     (fn [{:keys [sys hbase
                  krb? useKeyTab principal keyTab] :as conf}]
@@ -98,14 +108,19 @@
         hbc))))
 
 (defn rs-info-port
+  "Returns the port for the RegionServer web UI"
   [conf]
   (.getInt (build-hbase-conf conf) "hbase.regionserver.info.port" 60030))
 
-(defn connect-admin [conf]
+(defn connect-admin
+  "Creates HBaseAdmin instance with the given configuration.
+  TODO: HBaseAdmin is deprecated in favor of Admin in the recent versions of
+  HBase"
+  [conf]
   (HBaseAdmin. (build-hbase-conf conf)))
 
-(defmacro admin-let
+(defmacro with-admin
+  "Evaluates body with HBaseAdmin created with conf bound to name and
+  finally closes it."
   [[name conf] & body]
-  `(let [admin# (~connect-admin ~conf)
-         ~name admin#]
-     (try (doall ~@body) (finally (.close admin#)))))
+  `(with-open [~name (~connect-admin ~conf)] ~@body))

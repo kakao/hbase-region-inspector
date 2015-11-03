@@ -18,7 +18,6 @@
   (assoc (base/load->map load)
          :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)))
 
-;; Get HRegionInfo from HBaseAdmin
 (defn- online-regions
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
   [admin server-name]
@@ -40,6 +39,8 @@
       [(ByteBuffer/wrap region-name) (load->map load)])))
 
 (defn- aggregate-two-sources
+  "Merges the maps of region information from the two sources of information.
+  Regions that are not found on the both sources are discarded."
   [cluster-status admin server-name]
   (let [base-map {:server (.getServerName server-name)}
         ;; We have two different sources of info

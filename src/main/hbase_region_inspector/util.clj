@@ -28,6 +28,7 @@
     (if (empty? addrs) ["127.0.0.1"] addrs)))
 
 (defn keyword->str
+  "Converts keyword to capitalized string"
   [keyword]
   (-> keyword
       clojure.core/str
@@ -35,7 +36,9 @@
       str/trim
       str/capitalize))
 
-(defn locate-file [basedir relpath]
+(defn locate-file
+  "Tries to find the absolute path of the given path"
+  [basedir relpath]
   (let [file (io/file relpath)]
     (cond
       (.isAbsolute file) relpath

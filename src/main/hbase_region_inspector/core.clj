@@ -128,9 +128,9 @@
     props))
 
 (defn collect-info
-  "Collects information from hbase"
+  "Collects information from HBase."
   [config]
-  (hbase/admin-let
+  (hbase/with-admin
     [admin config]
     (hbase/collect-info admin)))
 
@@ -384,7 +384,7 @@
        (util/debug (format "move_region [%s]" remote))
        (when @read-only?
          (throw (Exception. "Read-only mode. Not allowed.")))
-       (hbase/admin-let
+       (hbase/with-admin
          [admin @config]
          (.move admin (.getBytes region) (.getBytes dest))
          (loop [tries 20
