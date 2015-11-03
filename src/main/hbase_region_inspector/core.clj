@@ -15,22 +15,16 @@
             [hbase-region-inspector.config :as config])
   (:gen-class))
 
-;;; ZooKeeper quorum we point to
-(defonce config (atom {}))
+(defonce ^{:doc "Application configuration"} config (atom {}))
+(defonce ^{:doc "Whether we should allow region relocation or not"} read-only? (atom true))
+(defonce ^{:doc "Whether we should include system regions or not"} with-system? (atom true))
+(defonce ^{:doc "Cached result of the previous inspection"} cached
+  (atom {:updated-at nil :regions [] :response {}}))
+(defonce ^{:doc "Inspection interval"} update-interval (atom 10))
 
-;;; Whether we should allow region relocation or not
-(defonce read-only? (atom true))
-
-;;; Whether we should include system regions or not
-(defonce with-system? (atom true))
-
-;;; Cache the result of previous inspection
-(defonce cached (atom {:updated-at nil :regions [] :response {}}))
-
-;;; Inspection interval
-(defonce update-interval (atom 10))
-
-(defn long-fmt [val]
+(defn long-fmt
+  "Returns string representation of the given integer"
+  [val]
   (str/replace (str (long val)) #"\B(?=(\d{3})+(?!\d))" ","))
 
 (defn format-val
@@ -316,10 +310,13 @@
       (recur))))
 
 (defn json-response
+  "Returns JSON response for the given data"
   [data]
   (-> data json/generate-string response))
 
 (defmacro cached-json-response
+  "Evaluates forms and builds JSON response with the result of it. The response
+  is cached by the keys."
   [[& keys] & forms]
   (let [keys (vec keys)]
     `(if-let [body# (get-in @cached [:response ~keys])]
@@ -331,6 +328,7 @@
          (response json#)))))
 
 (defn strip-zookeeper-quorum
+  "Returns a compact representation of the ZooKeeper quorum"
   [zk]
   (->> (str/split zk #",")
        (map #(first (str/split % #"[:\.]")))
@@ -401,7 +399,9 @@
        (update-regions!)
        (json-response {})))
 
-(defn wrap-exception [handler]
+(defn wrap-exception
+  "Ring middleware that catches the exception and turn it into 500 response"
+  [handler]
   (fn [request]
     (try
       (handler request)
@@ -423,7 +423,9 @@
               wrap-exception)
           (route/not-found "404")))
 
-(defn- bootstrap [conf port bg]
+(defn- bootstrap
+  "Starts the application"
+  [conf port bg]
   ;; Make sure that we can connect to the cluster before
   ;; starting background process
   (reset! config conf)
@@ -438,7 +440,9 @@
     (util/info (format "  http://%s:%d" ip port)))
   (run-jetty app {:port port}))
 
-(defn exit [message]
+(defn exit
+  "Prints the message and terminates the program"
+  [message]
   (println message)
   (println
     (str/join
