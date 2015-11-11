@@ -1,4 +1,4 @@
-(def project-version "0.3.1")
+(def project-version "0.3.2")
 (defn bin [profile]
   (format "hbase-region-inspector-%s-%s" (name profile) project-version))
 (defn jar [profile]
