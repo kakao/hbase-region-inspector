@@ -49,8 +49,9 @@
   "Collects server and region statistics"
   [admin]
   (let [cluster-status (.getClusterStatus admin)]
-    {:servers (doall (collect-server-info cluster-status))
-     :regions (doall (collect-region-info admin cluster-status))}))
+    {:servers      (doall (collect-server-info cluster-status))
+     :regions      (doall (collect-region-info admin cluster-status))
+     :has-locality (-> (.getHBaseVersion cluster-status) first (not= \0))}))
 
 (def bytes-comp
   "Comparator for byte arrays"

@@ -50,6 +50,7 @@
                                              (double (/ val uncmp 0.01)))
                                      (format "%s / %s" (mb val) (mb uncmp)))
                                    (mb val))]
+      :locality                 ["Locality"     (str (int val) " %")]
       :store-file-index-size-mb ["Index"        (mb val)]
       :memstore-size-mb         ["Memstore"     (mb val)]
       :requests-rate            ["Requests/sec" (long-fmt val)]
@@ -68,14 +69,17 @@
 (defn build-popover
   "Builds a small HTML snippet for an entity"
   [title keys props]
-  (let [{:keys [table encoded-name]} props]
+  (let [has-locality (:has-locality @cached)
+        {:keys [table encoded-name]} props]
     (h/html
       title
       [:table {:class "table table-condensed table-striped"}
        [:tbody
         (map #(let [[k v] (format-val % (% props) props)]
                 [:tr [:th {:class "col-xs-2"} k] [:td v]])
-             (filter #(% props) keys))]])))
+             (filter #(and (% props)
+                           ;; Ignore locality if not available
+                           (or has-locality (not= % :locality))) keys))]])))
 
 (defn build-region-popover
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
@@ -87,6 +91,7 @@
        :start-key :end-key
        :store-file-size-mb
        :store-files
+       :locality
        :memstore-size-mb
        :requests
        :read-requests
@@ -102,6 +107,7 @@
     [:regions
      :store-files
      :store-file-size-mb
+     :locality
      :requests-rate
      :used-heap-mb
      :max-heap-mb]
@@ -115,6 +121,7 @@
     [:regions
      :store-files
      :store-file-size-mb
+     :locality
      :requests
      :read-requests
      :write-requests
@@ -151,6 +158,17 @@
       (let [table (:table region)]
         (or (.startsWith table "hbase:")
             (#{".META." "-ROOT-"} table)))))
+
+(defn calculate-locality
+  [regions]
+  (let [[loc tot] (reduce #(let [{loc :local-size-mb tot :store-file-size-mb
+                                  :or {loc 0 tot 0}} %2]
+                             (map + %1 [loc tot]))
+                          [0 0] regions)
+        result {:local-size-mb loc}]
+    (if (pos? tot)
+      (assoc result :locality (* 100 (/ loc tot)))
+      result)))
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
@@ -251,17 +269,30 @@
                                             :write-requests-rate
                                             :store-file-size-mb
                                             :store-uncompressed-size-mb
+                                            :local-size-mb
                                             :store-files
                                             :used-heap-mb
                                             :max-heap-mb])
                   with-count (assoc data :regions 1)
                   new (merge-with + sofar with-count)]
-              (assoc summary
-                     table
-                     (as-> new $
-                         (assoc $ :name table)
-                         (assoc $ :html (build-table-popover $))))))
+              (assoc summary table (assoc new :name table))))
           {} regions))
+
+(defn post-process-tablewise-data
+  "Attaches locality and HTML popover to the list of regions grouped by their
+  tables"
+  [grouped]
+  (into {}
+        (for [[table props] grouped]
+          [table
+           (let [with-locality
+                 (let [{loc :local-size-mb tot :store-file-size-mb} props]
+                   (if (pos? tot)
+                     (assoc props :locality (* 100 (/ loc tot)))
+                     props))]
+             (assoc with-locality
+                    :html
+                    (build-table-popover with-locality)))])))
 
 (defn update-regions!
   "Collects region info from HBase and store it in @cached"
@@ -269,9 +300,10 @@
   (util/debug "Updating regions")
   (let [old-regions (into {} (for [region (:regions @cached)]
                                [(:name region) region]))
-        {new-regions :regions
-         servers     :servers} (util/elapsed-time "collect-info"
-                                                  (collect-info @config))
+        {new-regions  :regions
+         servers      :servers
+         has-locality :has-locality} (util/elapsed-time "collect-info"
+                                                        (collect-info @config))
         prev-time (:updated-at @cached)
         now (System/currentTimeMillis)
         interval (- now (or prev-time now))
@@ -290,13 +322,18 @@
                              :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
                           new-regions)
         new-regions (pmap #(assoc % :html (build-region-popover %)) new-regions)
+        group-by-server (group-by :server new-regions)
         servers (into {} (for [[k v] servers]
-                           [k (assoc v :html (build-server-popover v))]))]
-    (reset! cached {:updated-at now
-                    :regions    new-regions
-                    :servers    servers
-                    :tables     (group-by-tables new-regions)
-                    :response   {}})))
+                           (let [v (merge v (calculate-locality (group-by-server k)))]
+                             ;; Build popover *after* we calculate the locality
+                             [k (assoc v :html (build-server-popover v))])))]
+    (reset! cached {:updated-at   now
+                    :regions      new-regions
+                    :servers      servers
+                    :has-locality has-locality
+                    :tables       (post-process-tablewise-data
+                                    (group-by-tables new-regions))
+                    :response     {}})))
 
 (defn start-periodic-updater!
   "Starts a thread that periodically runs update-regions!"
@@ -343,6 +380,7 @@
                                          :interval @update-interval
                                          :rs-port (hbase/rs-info-port @config)
                                          :admin (not @read-only?)
+                                         :has-locality (:has-locality @cached)
                                          :updated-at (:updated-at @cached)}))
        ;; (content-type (resource-response "index.html" {:root "public"})
        ;;               "text/html"))

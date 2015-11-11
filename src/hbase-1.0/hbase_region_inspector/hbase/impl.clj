@@ -15,8 +15,12 @@
 (defn load->map
   "Builds map from RegionLoad"
   [load]
-  (assoc (base/load->map load)
-         :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)))
+  (let [base (base/load->map load)
+        loc  (.getDataLocality load)]
+    (assoc base
+      :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)
+      :locality (* 100 loc)
+      :local-size-mb (* loc (:store-file-size-mb base)))))
 
 (defn- online-regions
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
