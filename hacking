@@ -30,5 +30,6 @@ done
 echo
 
 tmux send-keys -t .1 "(in-ns 'hbase-region-inspector.core)" Enter
+tmux send-keys -t .1 "(require '[clojure.pprint :refer [pprint]])" Enter
 tmux send-keys -t .1 "(reset! config (config/parse \"localhost\"))" Enter
 
