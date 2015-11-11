@@ -20,7 +20,12 @@
 (defonce ^{:doc "Whether we should allow region relocation or not"} read-only? (atom true))
 (defonce ^{:doc "Whether we should include system regions or not"} with-system? (atom true))
 (defonce ^{:doc "Cached result of the previous inspection"} cached
-  (atom {:updated-at nil :regions [] :response {}}))
+  (atom {:updated-at nil
+         :has-locality false
+         :regions []
+         :servers {}
+         :tables {}
+         :response {}}))
 (defonce ^{:doc "Inspection interval"} update-interval (atom 10))
 
 (defn long-fmt
