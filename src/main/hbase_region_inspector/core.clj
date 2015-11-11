@@ -291,7 +291,8 @@
         (for [[table props] grouped]
           [table
            (let [with-locality
-                 (let [{loc :local-size-mb tot :store-file-size-mb} props]
+                 (let [{loc :local-size-mb tot :store-file-size-mb
+                        :or {loc 0 tot 0}} props]
                    (if (pos? tot)
                      (assoc props :locality (* 100 (/ loc tot)))
                      props))]
