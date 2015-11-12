@@ -20,11 +20,15 @@ release:
 repl:
 	lein with-profile $(profile),$(profile)-test repl :connect localhost:9999
 
-lint:
+lint: cljlint jslint
+
+cljlint:
 	lein with-profile $(profile),$(profile)-test eastwood
+
+jslint:
 	node_modules/.bin/standard resources/jsx/
 
-watch:
+serve:
 	-killall -9 jsx
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
 	DEBUG=1 lein with-profile $(profile),$(profile)-test ring server-headless
@@ -39,4 +43,4 @@ autotest:
 doc:
 	lein with-profile $(profile) doc
 
-.PHONY: all build bin release js repl lint watch doc test autotest
+.PHONY: all build bin release js repl lint cljlint jslint serve doc test autotest

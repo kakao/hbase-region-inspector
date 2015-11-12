@@ -13,7 +13,7 @@ fi
 
 tmux split-window -d -h "make autotest profile=$profile; bash"
 
-tmux split-window -t .1 -d -p 80 "make watch profile=$profile; bash"
+tmux split-window -t .1 -d -p 80 "make serve profile=$profile; bash"
 echo -n "Waiting for nREPL to start "
 while ! tmux capture-pane -t .1 -p | grep 'Started nREPL' > /dev/null; do
   echo -n .
