@@ -1,6 +1,6 @@
 (ns hbase-region-inspector.core-test
   (:require [clojure.test :refer :all]
-            [hbase-region-inspector.core :refer :all]))
+            [hbase-region-inspector.core :refer :all :as c]))
 
 (deftest test-format-val
   (is (= ["Memstore" "100 MB"] (format-val :memstore-size-mb 100)))
@@ -124,3 +124,21 @@
       (is (= [4 1 7 10] (map :val2 foo-regions)))
       (is (= [2 8 5 11] (map :val2 bar-regions)))
       (is (= [3 6 12 9] (map :val2 baz-regions))))))
+
+(deftest test-system?
+  (is (not (#'c/system? "hbase:meta")))
+  (is (#'c/system? {:table "hbase:meta"}))
+  (is (#'c/system? {:table "unknown" :meta? true}))
+  (is (#'c/system? {:table ".META."})))
+
+(deftest test-calculate-locality
+  (is (= {:local-size-mb 0}
+         (calculate-locality [])))
+  (is (= {:local-size-mb 0 :locality 0}
+         (calculate-locality [{:store-file-size-mb 10}])))
+  (is (= {:local-size-mb 5 :locality 50}
+         (calculate-locality [{:local-size-mb 5 :store-file-size-mb 10}])))
+  (is (= {:local-size-mb 5 :locality 50}
+         (calculate-locality [{:local-size-mb 2 :store-file-size-mb 5}
+                              {:local-size-mb 3 :store-file-size-mb 3}
+                              {:store-file-size-mb 2}]))))

@@ -10,11 +10,6 @@
         right (fmt right)]
     (.compareTo left right)))
 
-(defn rand-range
-  "Returns a random number between min and max"
-  [min max]
-  (+ min (rand (- max min))))
-
 (defn local-ip-addresses
   "Returns the first local IPv4 address"
   []
@@ -49,7 +44,7 @@
           (.getAbsolutePath file)
           relpath)))))
 
-;; Use hand-crafted logger functions instead of tools.logging
+;;; Use hand-crafted logger functions instead of tools.logging
 (defn- log [type & message]
   (println (format "%s: %s: %s" (java.util.Date.) type (apply str message))))
 (defn debug [& message]

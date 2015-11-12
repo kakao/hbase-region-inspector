@@ -5,18 +5,24 @@
   (:import java.util.Properties
            java.lang.System))
 
-(defn- kerberos? [props]
+(defn- kerberos?
+  "Determines if Kerberos authentication should be enabled"
+  [props]
   (some?
     (some #(= "KERBEROS" (str/upper-case (get props % "")))
           ["hbase.security.authentication"
            "hadoop.security.authentication"])))
 
-(defn- require-key [a-map key]
-  (if-let [val (a-map key)]
-    val
-    (throw (IllegalArgumentException. (str key " not found")))))
+(defn- require-key
+  "Checks if a-map contains key and returns the corresponding value.
+  If key is not found, IllegalArgumentException is thrown."
+  [a-map key]
+  (or (a-map key)
+      (throw (IllegalArgumentException. (str key " not found")))))
 
-(defn- validate [config]
+(defn- validate
+  "Validates configuration for Kerberos authentication."
+  [config]
   (let [{:keys [krb? useKeyTab keyTab principal context hbase sys]} config]
     (require-key hbase "hbase.zookeeper.quorum")
     (when krb?
@@ -39,7 +45,9 @@
                    "JAAS configuration is missing keyTab entry"))))))
   config)
 
-(defn- parse-pairs [string]
+(defn- parse-pairs
+  "Parses key-value pairs in JAAS configuration and returns a map"
+  [string]
   (into
     {}
     (for [[_ k v1 v2] (re-seq #"(\S+)=(?:\"([^\"]+)\"|(\S+))" string)]
@@ -50,7 +58,9 @@
            #"^false;?$" false
            v))])))
 
-(defn- parse-jaas [path]
+(defn- parse-jaas
+  "Parses JAAS configuration file"
+  [path]
   (let [content (slurp path)
         contexts
         (map #(assoc (parse-pairs (last %)) :context (nth % 1))
@@ -60,13 +70,16 @@
         chosen (first contexts)]
     (cond (> (count contexts) 1)
           (util/warn
-            "Multiple configurations found in " path
-            ". Using " (:context chosen))
+            (format "Multiple configurations found in %s. Using \"%s\"."
+                    path (:context chosen)))
           (nil? chosen)
           (util/warn "No configuration found in " path))
     chosen))
 
-(defn- parse-config-file [^java.io.File file]
+(defn- parse-config-file
+  "Parses hbase-region-inspector configuration file and returns the map
+  representation of the configuration"
+  [^java.io.File file]
   (let [locate (partial util/locate-file (.getParent file))
         rdr    (io/reader file)
         props  (into {} (doto (Properties.) (.load rdr)))
@@ -82,14 +95,19 @@
     (merge {:krb? krb? :hbase hb :sys sys}
            (if krb? (parse-jaas jaas)))))
 
-(defn- build-config [quorum]
+(defn- build-config
+  "Builds basic configuration map from ZooKeeper quorum"
+  [quorum]
   (let [[quorum port] (str/split quorum #"/")]
     {:krb?  false
      :hbase (merge {"hbase.zookeeper.quorum" quorum}
                    (if port
                      {"hbase.zookeeper.property.clientPort" port}))}))
 
-(defn parse [spec]
+(defn parse
+  "Returns the configuration map for the given argument which can be either
+  a ZooKeeper quorum string or a configuration file path"
+  [spec]
   (let [file (io/file spec)
         conf (if (.exists file)
                (parse-config-file file)

@@ -20,36 +20,36 @@
 (defonce ^{:doc "Whether we should allow region relocation or not"} read-only? (atom true))
 (defonce ^{:doc "Whether we should include system regions or not"} with-system? (atom true))
 (defonce ^{:doc "Cached result of the previous inspection"} cached
-  (atom {:updated-at nil
+  (atom {:updated-at   nil
          :has-locality false
-         :regions []
-         :servers {}
-         :tables {}
-         :response {}}))
+         :regions      []
+         :servers      {}
+         :tables       {}
+         :response     {}}))
 (defonce ^{:doc "Inspection interval"} update-interval (atom 10))
 
 (defn long-fmt
-  "Returns string representation of the given integer"
+  "Returns the string representation of the given integer"
   [val]
   (str/replace (str (long val)) #"\B(?=(\d{3})+(?!\d))" ","))
 
 (defn format-val
   "String formatter for region properties"
   [type val & [props]]
-  (let [mb #(format "%s MB" (long-fmt %))
-        kb #(format "%s KB" (long-fmt %))
-        rate #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
+  (let [mb         #(format "%s MB" (long-fmt %))
+        kb         #(format "%s KB" (long-fmt %))
+        rate       #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
         count-rate #(if %2
                       (format "%s (%s/sec)" (long-fmt %1) (rate %2))
                       (long-fmt %1))
-        props (or props {})]
+        props      (or props {})]
     (case type
       :start-key                ["Start key"  (hbase/byte-buffer->str val)]
       :end-key                  ["End key"    (hbase/byte-buffer->str val)]
       :store-files              ["Storefiles" (long-fmt val)]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
-                                   (if (pos? val)
+                                   (if (pos? uncmp)
                                      (format "%s / %s (%.2f%%)"
                                              (mb val) (mb uncmp)
                                              (double (/ val uncmp 0.01)))
@@ -154,26 +154,30 @@
   "Returns an updated map with start-key and end-key as strings"
   [region]
   (reduce (fn [region prop]
-            (assoc region prop (hbase/byte-buffer->str (prop region))))
+            (update region prop hbase/byte-buffer->str))
           region
           [:start-key :end-key]))
 
-(defn- system? [region]
+(defn- system?
+  "Checks if the region is system region. System regions are not shown if
+  --no-system option is provided."
+  [region]
   (or (:meta? region)
-      (let [table (:table region)]
+      (if-let [table (:table region)]
         (or (.startsWith table "hbase:")
             (#{".META." "-ROOT-"} table)))))
 
 (defn calculate-locality
+  "Calculates the aggregated locality of the regions."
   [regions]
   (let [[loc tot] (reduce #(let [{loc :local-size-mb tot :store-file-size-mb
                                   :or {loc 0 tot 0}} %2]
                              (map + %1 [loc tot]))
                           [0 0] regions)
-        result {:local-size-mb loc}]
+        accum {:local-size-mb loc}]
     (if (pos? tot)
-      (assoc result :locality (* 100 (/ loc tot)))
-      result)))
+      (assoc accum :locality (* 100 (/ loc tot)))
+      accum)))
 
 (defn regions-by-servers
   "Generates output for /server_regions.json. Regions grouped by their servers."
@@ -284,18 +288,13 @@
           {} regions))
 
 (defn post-process-tablewise-data
-  "Attaches locality and HTML popover to the list of regions grouped by their
-  tables"
+  "Attaches locality and HTML popover to each table information"
   [grouped]
   (into {}
         (for [[table props] grouped]
           [table
-           (let [with-locality
-                 (let [{loc :local-size-mb tot :store-file-size-mb
-                        :or {loc 0 tot 0}} props]
-                   (if (pos? tot)
-                     (assoc props :locality (* 100 (/ loc tot)))
-                     props))]
+           (let [with-locality (merge props (calculate-locality [props]))]
+             ;; Popover should be generated after locality is calculated
              (assoc with-locality
                     :html
                     (build-table-popover with-locality)))])))
@@ -322,10 +321,10 @@
                       (/ (- new-val old-val) interval 0.001))))
         new-regions (pmap #(assoc
                              %
-                             :requests-rate (diff-fn % :requests)
+                             :requests-rate       (diff-fn % :requests)
                              :write-requests-rate (diff-fn % :write-requests)
-                             :read-requests-rate (diff-fn % :read-requests)
-                             :compaction ((juxt :compacted-kvs :total-compacting-kvs) %))
+                             :read-requests-rate  (diff-fn % :read-requests)
+                             :compaction          ((juxt :compacted-kvs :total-compacting-kvs) %))
                           new-regions)
         new-regions (pmap #(assoc % :html (build-region-popover %)) new-regions)
         group-by-server (group-by :server new-regions)
