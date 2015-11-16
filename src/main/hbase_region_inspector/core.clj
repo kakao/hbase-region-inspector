@@ -19,6 +19,7 @@
 (defonce ^{:doc "Application configuration"} config (atom {}))
 (defonce ^{:doc "Whether we should allow region relocation or not"} read-only? (atom true))
 (defonce ^{:doc "Whether we should include system regions or not"} with-system? (atom true))
+(defonce ^{:doc "Number of updates"} ticks (atom 0))
 (defonce ^{:doc "Cached result of the previous inspection"} cached
   (atom {:updated-at   nil
          :has-locality false
@@ -341,6 +342,7 @@
                            (let [v (merge v (calculate-locality (group-by-server k)))]
                              ;; Build popover *after* we calculate the locality
                              [k (assoc v :html (build-server-popover v))])))]
+    (swap! ticks inc)
     (reset! cached {:updated-at   now
                     :regions      new-regions
                     :servers      servers
@@ -375,7 +377,7 @@
        (do
          (util/debug (format "Returning cached JSON [%s]" (str ~keys)))
          (response body#))
-       (let [json# (json/generate-string (do ~@forms))]
+       (let [json# (json/generate-string (assoc (do ~@forms) :ticks @ticks))]
          (swap! cached #(assoc-in % [:response ~keys] json#))
          (response json#)))))
 

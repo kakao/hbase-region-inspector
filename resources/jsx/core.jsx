@@ -247,6 +247,11 @@ function refreshApp (menu, opts) {
         startDrop(function () { refreshApp(menu, opts) })
       }
       if (!_locality) $('.locality').hide()
+      if (result.ticks < 2 && opts.metric.indexOf('-rate') >= 0) {
+        $('#rate-na').removeClass('hidden')
+      } else {
+        $('#rate-na').addClass('hidden')
+      }
     },
     error: function (jqXHR, text, error) {
       debug(jqXHR, text, error)
@@ -494,6 +499,8 @@ var RegionByServer = React.createClass(_.extend({
 
           <TableButtons allTables={this.props.result.tables} tables={this.props.tables} parent={this}/>
         </form>
+
+        <div id='rate-na' className='alert alert-warning hidden' role='alert'>Data is not yet available. Please wait.</div>
 
         {servers.length > 0
           ? ''
@@ -785,6 +792,9 @@ var RegionByTable = React.createClass(_.extend({
 
           <TableButtons allTables={allTables} tables={this.props.tables} parent={this}/>
         </form>
+
+        <div id='rate-na' className='alert alert-warning hidden' role='alert'>Data is not yet available. Please wait.</div>
+
         {tables.length > 0
           ? ''
           : <div className='alert alert-warning' role='alert'>No data found</div>}
