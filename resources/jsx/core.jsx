@@ -1,4 +1,4 @@
-var _admin, _condensed, _interval, _rs_port, _tables, _zookeeper
+var _admin, _condensed, _interval, _rs_port, _tables, _zookeeper, _locality
 var _, $, React, ReactDOM, Spinner
 
 var refresh = {
@@ -246,7 +246,7 @@ function refreshApp (menu, opts) {
         startDrag()
         startDrop(function () { refreshApp(menu, opts) })
       }
-      if (!_locality) $(".locality").hide()
+      if (!_locality) $('.locality').hide()
     },
     error: function (jqXHR, text, error) {
       debug(jqXHR, text, error)
@@ -526,7 +526,7 @@ var RegionByServer = React.createClass(_.extend({
               <th>Compressed (MB)</th>
               <th>Uncompressed (MB)</th>
               <th>(Ratio)</th>
-              <th className="locality">Locality (%)</th>
+              <th className='locality'>Locality (%)</th>
               <th>Requests/sec</th>
               <th>Used heap (MB)</th>
               <th>Max heap (MB)</th>
@@ -543,7 +543,7 @@ var RegionByServer = React.createClass(_.extend({
                   <td>{fmt(server.props['store-uncompressed-size-mb'])}</td>
                   <td>{ratio(server.props['store-uncompressed-size-mb'],
                              server.props['store-file-size-mb'])}</td>
-                  <td className="locality">{fmt(server.props['locality'])}</td>
+                  <td className='locality'>{fmt(server.props['locality'])}</td>
                   <td>{fmt(server.props['requests-rate'])}</td>
                   <td>{fmt(server.props['used-heap-mb'])}</td>
                   <td>{fmt(server.props['max-heap-mb'])}</td>
@@ -558,7 +558,7 @@ var RegionByServer = React.createClass(_.extend({
               <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
               <td><em>{ratio(sums['store-uncompressed-size-mb'],
                              sums['store-file-size-mb'])}</em></td>
-              <td className="locality">
+              <td className='locality'>
                 <em>{Math.floor(100 * sums['local-size-mb'] / sums['store-file-size-mb'])}</em>
               </td>
               <td><em>{fmt(sums['requests-rate'])}</em></td>
@@ -582,18 +582,18 @@ var MetricsTab = React.createClass({
       <div className='row bottom-buffer'>
         <div className='col-md-12'>
           <ul className='nav nav-tabs'>
-            {[['store-file-size-mb',  'Data size'],
-              ['requests',            'Requests'],
-              ['requests-rate',       'Requests/sec'],
-              ['write-requests',      'Writes'],
+            {[['store-file-size-mb', 'Data size'],
+              ['requests', 'Requests'],
+              ['requests-rate', 'Requests/sec'],
+              ['write-requests', 'Writes'],
               ['write-requests-rate', 'Writes/sec'],
-              ['read-requests',       'Reads'],
-              ['read-requests-rate',  'Reads/sec'],
-              ['store-files',         'Storefiles'],
-              ['locality',            'Locality'],
-              ['memstore-size-mb',    'Memstore']].map(function (pair) {
+              ['read-requests', 'Reads'],
+              ['read-requests-rate', 'Reads/sec'],
+              ['store-files', 'Storefiles'],
+              ['locality', 'Locality'],
+              ['memstore-size-mb', 'Memstore']].map(function (pair) {
                 // Locality information is only available on HBase 1.0 or above
-                return (!_locality && pair[0] == 'locality') ? "" : (
+                return (!_locality && pair[0] === 'locality') ? '' : (
                   <li key={'rs-tab-metric-' + pair[0]} role='presentation' className={pair[0] === this.props.metric ? 'active' : ''}>
                     <a href={'#' + this.props.menu + '#' + pair[0]}>{pair[1]}</a>
                   </li>
@@ -848,7 +848,7 @@ RegionByTable.Table = React.createClass({
             <th>Compressed (MB)</th>
             <th>Uncompressed (MB)</th>
             <th>(Ratio)</th>
-            <th className="locality">Locality (%)</th>
+            <th className='locality'>Locality (%)</th>
             <th>Requests/sec</th>
             <th>Reads/sec</th>
             <th>Writes/sec</th>
@@ -865,7 +865,7 @@ RegionByTable.Table = React.createClass({
                 <td>{fmt(table.props['store-uncompressed-size-mb'])}</td>
                 <td>{ratio(table.props['store-uncompressed-size-mb'],
                            table.props['store-file-size-mb'])}</td>
-                <td className="locality">{fmt(table.props['locality'])}</td>
+                <td className='locality'>{fmt(table.props['locality'])}</td>
                 <td>{fmt(table.props['requests-rate'])}</td>
                 <td>{fmt(table.props['read-requests-rate'])}</td>
                 <td>{fmt(table.props['write-requests-rate'])}</td>
@@ -880,7 +880,7 @@ RegionByTable.Table = React.createClass({
             <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
             <td><em>{ratio(sums['store-uncompressed-size-mb'],
                            sums['store-file-size-mb'])}</em></td>
-            <td className="locality">
+            <td className='locality'>
               <em>{Math.floor(100 * sums['local-size-mb'] / sums['store-file-size-mb'])}</em>
             </td>
             <td><em>{fmt(sums['requests-rate'])}</em></td>

@@ -26,7 +26,7 @@ cljlint:
 	lein with-profile $(profile),$(profile)-test eastwood
 
 jslint:
-	node_modules/.bin/standard resources/jsx/
+	node_modules/.bin/standard resources/jsx/core.jsx
 
 serve:
 	-killall -9 jsx
