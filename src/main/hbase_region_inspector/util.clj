@@ -11,7 +11,7 @@
     (.compareTo left right)))
 
 (defn local-ip-addresses
-  "Returns the first local IPv4 address"
+  "Returns local IPv4 addresses"
   []
   (let [addrs (->> (java.net.NetworkInterface/getNetworkInterfaces)
                    enumeration-seq
