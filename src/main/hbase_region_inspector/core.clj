@@ -158,14 +158,25 @@
           region
           [:start-key :end-key]))
 
+(def ^:private cumulative-metrics #{:requests :write-requests :read-requests})
+
 (defn- system?
-  "Checks if the region is system region. System regions are not shown if
-  --no-system option is provided."
+  "Checks if the region is a system region."
   [region]
   (or (:meta? region)
       (if-let [table (:table region)]
         (or (.startsWith table "hbase:")
             (#{".META." "-ROOT-"} table)))))
+
+(defn- filter-system-tables
+  "System regions are not shown if --no-system option is provided. They are
+  also excluded regardless of the flag in tabs where cumulative counts
+  are shown as their values often dwarf those of the other regions."
+  [with-system? metric regions]
+  (filter #(or (not (system? %))
+               (and with-system?
+                    (not (cumulative-metrics metric))))
+          regions))
 
 (defn calculate-locality
   "Calculates the aggregated locality of the regions."
@@ -183,8 +194,7 @@
   "Generates output for /server_regions.json. Regions grouped by their servers."
   [{:keys [regions servers metric sort tables with-system?]
     :or   {tables nil with-system? true}}]
-  (let [;; Exclude meta regions
-        all-regions (if with-system? regions (remove system? regions))
+  (let [all-regions (filter-system-tables with-system? metric regions)
 
         ;; Sort the tables in descending order by the sum of the given metric
         all-tables (keys (sort-by
@@ -227,8 +237,7 @@
   "Generates output for /table_regions.json. Regions grouped by their tables."
   [{:keys [regions table-summary metric sort tables with-system?]
     :or   {tables nil with-system? true}}]
-  (let [;; Exclude hbase:meta table
-        all-regions (if with-system? regions (remove system? regions))
+  (let [all-regions (filter-system-tables with-system? metric regions)
 
         ;; Sort the tables in their names
         all-tables (->> all-regions (map :table) (apply sorted-set) vec)
