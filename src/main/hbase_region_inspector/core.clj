@@ -501,7 +501,7 @@
   (System/exit code))
 
 (defn -main [& args]
-  (let [[opts args] ((juxt filter remove) #(.startsWith % "-") args)
+  (let [{opts true args false} (group-by #(.startsWith % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
     (if-let [unknowns (seq (set/difference opts #{:help :admin :no-system}))]
       (exit (str "unknown options: " unknowns) 1))
