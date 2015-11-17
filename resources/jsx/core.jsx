@@ -548,7 +548,7 @@ var RegionByServer = React.createClass(_.extend({
                   <td>{fmt(server.props['store-file-size-mb'])}</td>
                   <td>
                     {fmt(server.props['store-uncompressed-size-mb'])}
-                    <i className="text-muted">
+                    <i className='text-muted'>
                       {ratio(server.props['store-uncompressed-size-mb'],
                              server.props['store-file-size-mb'])}
                     </i>
@@ -567,7 +567,7 @@ var RegionByServer = React.createClass(_.extend({
               <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
               <td><em>
                 {fmt(sums['store-uncompressed-size-mb'])}
-                <i className="text-muted">
+                <i className='text-muted'>
                   {ratio(sums['store-uncompressed-size-mb'],
                          sums['store-file-size-mb'])}
                 </i>
@@ -880,7 +880,7 @@ RegionByTable.Table = React.createClass({
                 <td>{fmt(table.props['store-file-size-mb'])}</td>
                 <td>
                   {fmt(table.props['store-uncompressed-size-mb'])}
-                  <i className="text-muted">
+                  <i className='text-muted'>
                     {ratio(table.props['store-uncompressed-size-mb'],
                            table.props['store-file-size-mb'])}
                   </i>
@@ -899,7 +899,7 @@ RegionByTable.Table = React.createClass({
             <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
             <td><em>
               {fmt(sums['store-uncompressed-size-mb'])}
-              <i className="text-muted">
+              <i className='text-muted'>
                 {ratio(sums['store-uncompressed-size-mb'],
                        sums['store-file-size-mb'])}
               </i>
