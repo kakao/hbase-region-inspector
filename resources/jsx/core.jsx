@@ -76,7 +76,7 @@ function fmt (val) {
 }
 
 function ratio (a, b) {
-  return (b == null || b === 0) ? '' : '(x ' + fmt(1.0 * a / b) + ')'
+  return (b == null || b === 0) ? '' : '(x ' + (1.0 * a / b).toFixed(2) + ')'
 }
 
 function summarize (arr, keys) {
