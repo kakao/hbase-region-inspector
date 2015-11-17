@@ -76,7 +76,7 @@ function fmt (val) {
 }
 
 function ratio (a, b) {
-  return (b == null || b === 0) ? '' : fmt(1.0 * a / b)
+  return (b == null || b === 0) ? '' : '(x ' + fmt(1.0 * a / b) + ')'
 }
 
 function summarize (arr, keys) {
@@ -532,7 +532,6 @@ var RegionByServer = React.createClass(_.extend({
               <th>Storefiles</th>
               <th>Compressed (MB)</th>
               <th>Uncompressed (MB)</th>
-              <th>(Ratio)</th>
               <th className='locality'>Locality (%)</th>
               <th>Requests/sec</th>
               <th>Used heap (MB)</th>
@@ -547,9 +546,13 @@ var RegionByServer = React.createClass(_.extend({
                   <td>{fmt(server.props['regions'])}</td>
                   <td>{fmt(server.props['store-files'])}</td>
                   <td>{fmt(server.props['store-file-size-mb'])}</td>
-                  <td>{fmt(server.props['store-uncompressed-size-mb'])}</td>
-                  <td>{ratio(server.props['store-uncompressed-size-mb'],
-                             server.props['store-file-size-mb'])}</td>
+                  <td>
+                    {fmt(server.props['store-uncompressed-size-mb'])}
+                    <i className="text-muted">
+                      {ratio(server.props['store-uncompressed-size-mb'],
+                             server.props['store-file-size-mb'])}
+                    </i>
+                  </td>
                   <td className='locality'>{fmt(server.props['locality'])}</td>
                   <td>{fmt(server.props['requests-rate'])}</td>
                   <td>{fmt(server.props['used-heap-mb'])}</td>
@@ -562,9 +565,13 @@ var RegionByServer = React.createClass(_.extend({
               <td><em>{fmt(sums['regions'])}</em></td>
               <td><em>{fmt(sums['store-files'])}</em></td>
               <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
-              <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
-              <td><em>{ratio(sums['store-uncompressed-size-mb'],
-                             sums['store-file-size-mb'])}</em></td>
+              <td><em>
+                {fmt(sums['store-uncompressed-size-mb'])}
+                <i className="text-muted">
+                  {ratio(sums['store-uncompressed-size-mb'],
+                         sums['store-file-size-mb'])}
+                </i>
+              </em></td>
               <td className='locality'>
                 <em>{Math.floor(100 * sums['local-size-mb'] / sums['store-file-size-mb'])}</em>
               </td>
@@ -857,7 +864,6 @@ RegionByTable.Table = React.createClass({
             <th>Storefiles</th>
             <th>Compressed (MB)</th>
             <th>Uncompressed (MB)</th>
-            <th>(Ratio)</th>
             <th className='locality'>Locality (%)</th>
             <th>Requests/sec</th>
             <th>Reads/sec</th>
@@ -872,9 +878,13 @@ RegionByTable.Table = React.createClass({
                 <td>{fmt(table.props['regions'])}</td>
                 <td>{fmt(table.props['store-files'])}</td>
                 <td>{fmt(table.props['store-file-size-mb'])}</td>
-                <td>{fmt(table.props['store-uncompressed-size-mb'])}</td>
-                <td>{ratio(table.props['store-uncompressed-size-mb'],
-                           table.props['store-file-size-mb'])}</td>
+                <td>
+                  {fmt(table.props['store-uncompressed-size-mb'])}
+                  <i className="text-muted">
+                    {ratio(table.props['store-uncompressed-size-mb'],
+                           table.props['store-file-size-mb'])}
+                  </i>
+                </td>
                 <td className='locality'>{fmt(table.props['locality'])}</td>
                 <td>{fmt(table.props['requests-rate'])}</td>
                 <td>{fmt(table.props['read-requests-rate'])}</td>
@@ -887,9 +897,13 @@ RegionByTable.Table = React.createClass({
             <td><em>{fmt(sums['regions'])}</em></td>
             <td><em>{fmt(sums['store-files'])}</em></td>
             <td><em>{fmt(sums['store-file-size-mb'])}</em></td>
-            <td><em>{fmt(sums['store-uncompressed-size-mb'])}</em></td>
-            <td><em>{ratio(sums['store-uncompressed-size-mb'],
-                           sums['store-file-size-mb'])}</em></td>
+            <td><em>
+              {fmt(sums['store-uncompressed-size-mb'])}
+              <i className="text-muted">
+                {ratio(sums['store-uncompressed-size-mb'],
+                       sums['store-file-size-mb'])}
+              </i>
+            </em></td>
             <td className='locality'>
               <em>{Math.floor(100 * sums['local-size-mb'] / sums['store-file-size-mb'])}</em>
             </td>

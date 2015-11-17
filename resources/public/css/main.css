@@ -146,6 +146,10 @@ tr.condensed .metric-value {
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
 
+i.text-muted {
+  margin-left: 10px;
+}
+
 body {
   padding-bottom: 40px;
 }
