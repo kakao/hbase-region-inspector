@@ -15,7 +15,7 @@ bin:
 
 release:
 	mkdir -p releases/
-	cp -v target/$(profile)/hbase-region-inspector-$(profile)-* releases/
+	cp -v target/$(profile)/hbase-region-inspector-* releases/
 
 repl:
 	lein with-profile $(profile),$(profile)-test repl :connect localhost:9999

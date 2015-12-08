@@ -1,8 +1,10 @@
 (def project-version "0.3.2")
+(def current :1.0)
 (defn bin [profile]
-  (format "hbase-region-inspector-%s-%s" (name profile) project-version))
-(defn jar [profile]
-  (str (bin profile) ".jar"))
+  (str "hbase-region-inspector-" project-version (when (not= profile current)
+                                                   (str "-" (name profile)))))
+(defn jar [profile & [suffix]]
+  (str (bin profile) suffix ".jar"))
 
 (defproject hbase-region-inspector project-version
   :description "HBase region dashboard"
@@ -48,7 +50,8 @@
                               ;; MiniDFSCluster
                               [org.apache.hadoop/hadoop-minicluster "2.0.0-cdh4.7.1"]]}
    :cdh4 ^:leaky {:bin {:name ~(bin :cdh4)}
-                  :uberjar-name ~(jar :cdh4)
+                  :jar-name ~(jar :cdh4)
+                  :uberjar-name ~(jar :cdh4 "-standalone")
                   :target-path  "target/cdh4"
                   :source-paths ["src/hbase-cdh4"]
                   ;; lein with-profile cdh4 deps :tree
@@ -62,9 +65,10 @@
                                  [org.slf4j/slf4j-log4j12 "1.7.12"]]}
    :1.0-test {:dependencies [[org.apache.hbase/hbase-testing-util "1.0.0"]]}
    :1.0 ^:leaky {:bin {:name ~(bin :1.0)}
-                  :uberjar-name ~(jar :1.0)
-                  :target-path  "target/1.0"
-                  :source-paths ["src/hbase-1.0"]
-                  :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
-                                 [org.apache.hbase/hbase-common "1.0.0"]]}
+                 :jar-name ~(jar :1.0)
+                 :uberjar-name ~(jar :1.0 "-standalone")
+                 :target-path  "target/1.0"
+                 :source-paths ["src/hbase-1.0"]
+                 :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
+                                [org.apache.hbase/hbase-common "1.0.0"]]}
    :uberjar {:aot :all}})
