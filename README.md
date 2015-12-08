@@ -6,8 +6,9 @@ A visual dashboard of HBase region statistics.
 
 ## Usage
 
-Download the executable binary that matches the version of your HBase cluster
-and start it with the following command-line arguments.
+[Download the executable binary][rel] that matches the version of your HBase
+cluster, add execute permission, and start it with the following command-line
+arguments.
 
 ```
 usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
@@ -17,6 +18,8 @@ usage: hbase-region-inspector [OPTIONS] ┌ QUORUM[/ZKPORT] ┐ PORT [INTERVAL]
     --no-system   Hide system tables
     --help        Show this message
 ```
+
+[rel]: https://github.com/kakao/hbase-region-inspector/releases
 
 ### Accessing secured cluster
 
