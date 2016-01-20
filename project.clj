@@ -12,7 +12,7 @@
   :license {:name "MIT"}
   :repositories [["cloudera-releases"
                   "https://repository.cloudera.com/artifactory/cloudera-repos"]]
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [ring/ring-core "1.4.0"]
                  [ring/ring-devel "1.4.0"]
                  [ring/ring-jetty-adapter "1.4.0"]
@@ -32,7 +32,7 @@
             [jonase/eastwood "0.2.1"]] ; lein eastwood
   :ring {:handler hbase-region-inspector.core/app
          :nrepl {:start? true :port 9999}}
-  :jvm-opts ["-Xmx2g"]
+  :jvm-opts ["-Xmx2g" "-Dclojure.compiler.direct-linking=true"]
   :main ^:skip-aot hbase-region-inspector.core
 
   :uberjar-exclusions [#".*/\.module-cache/"]

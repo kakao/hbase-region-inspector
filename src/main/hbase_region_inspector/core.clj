@@ -166,7 +166,7 @@
   [region]
   (or (:meta? region)
       (if-let [table (:table region)]
-        (or (.startsWith table "hbase:")
+        (or (str/starts-with? table "hbase:")
             (#{".META." "-ROOT-"} table)))))
 
 (defn- filter-system-tables
@@ -512,7 +512,7 @@
   (System/exit code))
 
 (defn -main [& args]
-  (let [{opts true args false} (group-by #(.startsWith % "-") args)
+  (let [{opts true args false} (group-by #(str/starts-with? % "-") args)
         opts (set (map #(keyword (str/replace % #"^-*" "")) opts))]
     (if-let [unknowns (seq (set/difference opts #{:help :admin :no-system}))]
       (exit (str "unknown options: " unknowns) 1))

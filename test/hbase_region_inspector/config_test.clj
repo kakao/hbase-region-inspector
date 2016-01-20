@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.config-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [clojure.java.io :refer [resource file]]
             [hbase-region-inspector.config :refer :all :as c]))
 
@@ -42,8 +43,8 @@
            :context "KrbClient"
            :useTicketCache true)
       ;; Resolved to absolute path
-      (is (.startsWith (sys "java.security.auth.login.config") "/"))
-      (is (.endsWith (sys "java.security.auth.login.config") "ticket-cache-jaas.conf"))
+      (is (str/starts-with? (sys "java.security.auth.login.config") "/"))
+      (is (str/ends-with? (sys "java.security.auth.login.config") "ticket-cache-jaas.conf"))
       ;; Path untouched
       (is (= "/etc/krb5.conf" (sys "java.security.krb5.conf")))))
 
@@ -64,8 +65,8 @@
            "hbase.security.authentication" "kerberos"
            "hadoop.security.authentication" "kerberos")
       ;; Resolved to absolute path
-      (is (.startsWith (sys "java.security.auth.login.config") "/"))
-      (is (.endsWith (sys "java.security.auth.login.config") "keytab-jaas.conf"))
+      (is (str/starts-with? (sys "java.security.auth.login.config") "/"))
+      (is (str/ends-with? (sys "java.security.auth.login.config") "keytab-jaas.conf"))
       ;; Path untouched
       (is (= "keytab-jaas.conf" (sys "java.extra.system.property")))
       (are [key val] (= val (config key))

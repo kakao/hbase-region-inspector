@@ -85,7 +85,7 @@
         props  (into {} (doto (Properties.) (.load rdr)))
         [sys hb] (map #(into {} %)
                       ((juxt filter remove)
-                       #(.startsWith (key %) "java.") props))
+                       #(str/starts-with? (key %) "java.") props))
         sys (into {}
                   (for [[k v] sys]
                     [k (if (#{"java.security.auth.login.config"
