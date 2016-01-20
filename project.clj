@@ -32,10 +32,6 @@
             [jonase/eastwood "0.2.1"]] ; lein eastwood
   :ring {:handler hbase-region-inspector.core/app
          :nrepl {:start? true :port 9999}}
-  :bin {:jvm-opts ~(if-let [jvm-opts (or (System/getenv "JVM_OPTS")
-                                         (System/getenv "JAVA_OPTS"))]
-                     (clojure.string/split jvm-opts #"\s+")
-                     ["-Xmx2g"])}
   :jvm-opts ["-Xmx2g"]
   :main ^:skip-aot hbase-region-inspector.core
 
