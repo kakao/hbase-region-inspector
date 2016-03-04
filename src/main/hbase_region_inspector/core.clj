@@ -184,7 +184,7 @@
   [regions]
   (let [[loc tot] (reduce #(let [{loc :local-size-mb tot :store-file-size-mb
                                   :or {loc 0 tot 0}} %2]
-                             (map + %1 [loc tot]))
+                             (doall (map + %1 [loc tot])))
                           [0 0] regions)
         accum {:local-size-mb loc}]
     (if (pos? tot)
