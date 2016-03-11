@@ -2,10 +2,11 @@
   (:require [clojure.string :as str]
             [hbase-region-inspector.util :as util]
             [hbase-region-inspector.hbase.impl :as hbase-impl])
-  (:import org.apache.hadoop.hbase.client.HBaseAdmin
-           org.apache.hadoop.hbase.HBaseConfiguration
-           org.apache.hadoop.hbase.util.Bytes
-           org.apache.hadoop.security.UserGroupInformation))
+  (:import [org.apache.hadoop.hbase
+            client.HBaseAdmin util.Bytes
+            HBaseConfiguration ClusterStatus]
+           org.apache.hadoop.security.UserGroupInformation
+           org.apache.hadoop.conf.Configuration))
 
 (defn server-load->map
   "Transforms ServerLoad object into clojure map"
@@ -26,7 +27,7 @@
 
 (defn- collect-server-info
   "Collects server statistics"
-  [cluster-status]
+  [^ClusterStatus cluster-status]
   (let [server-names (.getServers cluster-status)
         server-loads (map #(.getLoad cluster-status %) server-names)]
     (into
@@ -79,7 +80,7 @@
     (set-sys! "java.security.krb5.realm" realm)
     (set-sys! "java.security.krb5.kdc" kdc-list)))
 
-(def build-hbase-conf
+(def ^Configuration build-hbase-conf
   "Builds HBaseConfiguration from the given map of configuration. The built
   objects are cached."
   (memoize

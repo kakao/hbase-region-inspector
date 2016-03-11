@@ -8,7 +8,7 @@
   (let [fmt   (fn [s] (str/replace s #"[0-9]+" #(format "%04d" (Long/parseLong %))))
         left  (fmt left)
         right (fmt right)]
-    (.compareTo left right)))
+    (.compareTo ^String left right)))
 
 (defn local-ip-addresses
   "Returns local IPv4 addresses"

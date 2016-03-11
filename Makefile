@@ -23,7 +23,7 @@ repl:
 lint: cljlint jslint
 
 cljlint:
-	lein with-profile $(profile),$(profile)-test eastwood
+	lein with-profile $(profile),$(profile)-test eastwood "{:exclude-linters [:deprecations]}"
 
 jslint:
 	node_modules/.bin/standard resources/jsx/core.jsx

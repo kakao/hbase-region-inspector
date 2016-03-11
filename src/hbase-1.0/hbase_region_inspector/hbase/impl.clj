@@ -1,20 +1,22 @@
 (ns hbase-region-inspector.hbase.impl
   (:require [clojure.set :as set]
             [hbase-region-inspector.hbase.base :as base])
-  (:import org.apache.hadoop.hbase.util.Bytes
+  (:import [org.apache.hadoop.hbase
+            util.Bytes client.Admin
+            HRegionInfo RegionLoad ClusterStatus ServerName]
            java.nio.ByteBuffer))
 
 ;; http://archive.cloudera.com/cdh5/cdh/5/hbase-0.98.6-cdh5.3.3/apidocs/index.html
 
 (defn info->map
   "Builds map from HRegionInfo"
-  [info]
+  [^HRegionInfo info]
   (assoc (base/info->map info)
          :table (str (.getTable info))))
 
 (defn load->map
   "Builds map from RegionLoad"
-  [load]
+  [^RegionLoad load]
   (let [base (base/load->map load)
         loc  (.getDataLocality load)]
     (assoc base
@@ -24,16 +26,17 @@
 
 (defn- online-regions
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"
-  [admin server-name]
+  [^Admin admin server-name]
   (into
     {}
-    (for [info (.getOnlineRegions admin server-name)]
+    (for [^HRegionInfo info (.getOnlineRegions admin server-name)]
       [(ByteBuffer/wrap (.getRegionName info)) (info->map info)])))
 
 ;; Get RegionLoad from ClusterStatus
 (defn- region-loads
   "Extracts region information from ClusterStatus.getLoad"
-  [cluster-status server-name]
+  [^ClusterStatus cluster-status
+   ^ServerName    server-name]
   (into
     {}
     (for [[region-name load]
@@ -45,7 +48,7 @@
 (defn- aggregate-two-sources
   "Merges the maps of region information from the two sources of information.
   Regions that are not found on the both sources are discarded."
-  [cluster-status admin server-name]
+  [cluster-status admin ^ServerName server-name]
   (let [base-map {:server (.getServerName server-name)}
         ;; We have two different sources of info
         from-info (future (online-regions admin server-name))
@@ -60,10 +63,10 @@
 
 (defn collect-region-info
   "Returns the region information as a list of maps"
-  [admin cluster-status]
+  [admin ^ClusterStatus cluster-status]
   (let [server-names (.getServers cluster-status)
         aggregated (pmap (partial aggregate-two-sources cluster-status admin)
                          server-names)]
     (for [region->info aggregated
           [k v] region->info]
-      (assoc v :name (Bytes/toStringBinary (.array k))))))
+      (assoc v :name (Bytes/toStringBinary (.array ^ByteBuffer k))))))
