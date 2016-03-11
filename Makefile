@@ -31,14 +31,14 @@ jslint:
 serve:
 	-killall -9 jsx
 	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
-	DEBUG=1 lein with-profile $(profile),$(profile)-test ring server-headless
+	DEBUG=1 lein with-profile $(profile),$(profile)-test,user ring server-headless
 
 test:
 	lein with-profile $(profile),$(profile)-test test
 
 autotest:
 	# https://github.com/jakemcc/lein-test-refresh/issues/35
-	lein with-profile $(profile),$(profile)-test,base test-refresh
+	lein with-profile $(profile),$(profile)-test,user test-refresh
 
 doc:
 	lein with-profile $(profile) doc
