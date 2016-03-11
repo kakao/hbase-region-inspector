@@ -1,6 +1,6 @@
 {
   "repository": "junegunn/hbase-region-inspector",
-  "license": "MIT",
+  "license": "Apache License 2.0",
   "devDependencies": {
     "bower": "~1.4.1",
     "gulp": "^3.8.11",

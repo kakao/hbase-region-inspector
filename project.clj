@@ -8,8 +8,8 @@
 
 (defproject hbase-region-inspector project-version
   :description "HBase region dashboard"
-  :url "http://example.com/FIXME"
-  :license {:name "MIT"}
+  :url "https://github.com/kakao/hbase-region-inspector"
+  :license {:name "Apache License 2.0"}
   :repositories [["cloudera-releases"
                   "https://repository.cloudera.com/artifactory/cloudera-repos"]]
   :dependencies [[org.clojure/clojure "1.8.0"]

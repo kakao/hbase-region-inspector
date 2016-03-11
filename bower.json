@@ -4,7 +4,7 @@
   "authors": [
     "Junegunn Choi <junegunn.c@gmail.com>"
   ],
-  "license": "MIT",
+  "license": "Apache License 2.0",
   "ignore": [
     "**/.*",
     "node_modules",
