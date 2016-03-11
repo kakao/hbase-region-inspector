@@ -45,8 +45,8 @@
                       (long-fmt %1))
         props      (or props {})]
     (case type
-      :start-key                ["Start key"  (hbase/byte-buffer->str val)]
-      :end-key                  ["End key"    (hbase/byte-buffer->str val)]
+      :start-key                ["Start key"  (hbase/byte-array->str val)]
+      :end-key                  ["End key"    (hbase/byte-array->str val)]
       :store-files              ["Storefiles" (long-fmt val)]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
@@ -155,7 +155,7 @@
   "Returns an updated map with start-key and end-key as strings"
   [region]
   (reduce (fn [region prop]
-            (update region prop hbase/byte-buffer->str))
+            (update region prop hbase/byte-array->str))
           region
           [:start-key :end-key]))
 
