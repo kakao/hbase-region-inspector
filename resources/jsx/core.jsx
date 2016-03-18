@@ -679,7 +679,9 @@ RegionByServer.Row = React.createClass({
   render: function () {
     var metric = this.props.metric
     var regions = this.props.regions
-    var shortName = this.props.name.replace(/\..*/, '')
+    var shortName = this.props.name.match(/^[0-9.,]*$/)
+      ? this.props.name.replace(/,[^,]*$/, '')
+      : this.props.name.replace(/\..*/, '')
     var url = 'http://' + this.props.name.replace(/,.*/, '') + ':' + _rs_port
     var localSum = this.props.sum
     var condensed = this.props.condensed ? ' condensed' : ''
