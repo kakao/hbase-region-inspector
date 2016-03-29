@@ -79,6 +79,10 @@ function ratio (a, b) {
   return (a == null || b == null || b === 0) ? '' : '(x ' + (1.0 * a / b).toFixed(2) + ')'
 }
 
+function shorten (name) {
+  return name.replace(name.match(/^[0-9.,]*$/) ? /,[^,]*$/ : /\..*/, '')
+}
+
 function summarize (arr, keys) {
   var sum = {sum: 0, max: 0}
   _.each(keys, function (k) {
@@ -543,7 +547,7 @@ var RegionByServer = React.createClass(_.extend({
             {servers.map(function (server) {
               return (
                 <tr key={'server-row-' + server.name}>
-                  <th>{server.name.replace(/\..*/, '')}</th>
+                  <th>{shorten(server.name)}</th>
                   <td>{fmt(server.props['regions'])}</td>
                   <td>{fmt(server.props['store-files'])}</td>
                   <td>{fmt(server.props['store-file-size-mb'])}</td>
@@ -680,9 +684,7 @@ RegionByServer.Row = React.createClass({
   render: function () {
     var metric = this.props.metric
     var regions = this.props.regions
-    var shortName = this.props.name.match(/^[0-9.,]*$/)
-      ? this.props.name.replace(/,[^,]*$/, '')
-      : this.props.name.replace(/\..*/, '')
+    var shortName = shorten(this.props.name)
     var url = 'http://' + this.props.name.replace(/,.*/, '') + ':' + _rs_port
     var localSum = this.props.sum
     var condensed = this.props.condensed ? ' condensed' : ''
