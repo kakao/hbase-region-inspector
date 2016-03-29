@@ -213,7 +213,8 @@
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
                      (sort-by key util/compare-server-names
-                              (group-by :server visible-regions)))
+                              (merge (zipmap (keys servers) (repeat []))
+                                     (group-by :server visible-regions))))
         ;; Function to sort the regions in the descending order
         score-fn #(vector (- (metric %))
                           (.indexOf all-tables (:table %)))
