@@ -47,6 +47,7 @@
     (case type
       :start-key                ["Start key"  (hbase/byte-array->str val)]
       :end-key                  ["End key"    (hbase/byte-array->str val)]
+      :regions                  ["Regions"    (long-fmt val)]
       :store-files              ["Storefiles" (long-fmt val)]
       :store-file-size-mb       ["Data size"
                                  (if-let [uncmp (:store-uncompressed-size-mb props)]
