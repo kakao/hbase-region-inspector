@@ -255,6 +255,7 @@ function refreshApp (menu, opts) {
     },
     error: function (jqXHR, text, error) {
       debug(jqXHR, text, error)
+      refresh.resume()
       ReactDOM.render(<App {...opts} menu='error' error={error}/>, document.getElementById('content'))
       schedule(function () { refreshApp(menu, opts) })
     },
