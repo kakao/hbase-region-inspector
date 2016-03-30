@@ -1,5 +1,6 @@
 (ns hbase-region-inspector.hbase.impl
   (:require [clojure.set :as set]
+            [hbase-region-inspector.util :as util]
             [hbase-region-inspector.hbase.base :as base])
   (:import [org.apache.hadoop.hbase
             util.Bytes client.Admin
@@ -69,4 +70,4 @@
                          server-names)]
     (for [region->info aggregated
           [k v] region->info]
-      (assoc v :name (Bytes/toStringBinary (.array ^ByteBuffer k))))))
+      (assoc v :name (util/byte-array->str (.array ^ByteBuffer k))))))

@@ -9,13 +9,6 @@
                         (f)
                         (.shutdownMiniCluster hbase)))
 
-(deftest test-byte-array->str
-  (let [chars (vec (.getBytes "hello"))
-        chars (apply conj chars (map byte (range 10)))
-        bytes (byte-array chars)]
-    (is (= "hello\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x09"
-           (byte-array->str bytes)))))
-
 (deftest test-bytes-comp
   (let [sorted
         (map vec

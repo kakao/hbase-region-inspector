@@ -58,11 +58,6 @@
   "Comparator for byte arrays"
   Bytes/BYTES_COMPARATOR)
 
-(defn byte-array->str
-  "Returns the string representation of a bytes array"
-  [^bytes buf]
-  (Bytes/toStringBinary buf))
-
 (defn- set-sys!
   "Sets system properties and prints debug log"
   [k v]

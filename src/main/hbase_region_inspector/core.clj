@@ -29,24 +29,19 @@
          :response     {}}))
 (defonce ^{:doc "Inspection interval"} update-interval (atom 10))
 
-(defn long-fmt
-  "Returns the string representation of the given integer"
-  [val]
-  (str/replace (str (long val)) #"\B(?=(\d{3})+(?!\d))" ","))
-
-(defn format-val
-  "String formatter for region properties"
-  [type val & [props]]
-  (let [mb         #(format "%s MB" (long-fmt %))
-        kb         #(format "%s KB" (long-fmt %))
-        rate       #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
-        count-rate #(if %2
-                      (format "%s (%s/sec)" (long-fmt %1) (rate %2))
-                      (long-fmt %1))
-        props      (or props {})]
+(let [long-fmt   #(str/replace (str (long %)) #"\B(?=(\d{3})+(?!\d))" ",")
+      mb         #(str (long-fmt %) " MB")
+      kb         #(str (long-fmt %) " KB")
+      rate       #(if (> % 10) (long-fmt %) (format "%.2f" (double %)))
+      count-rate #(if %2
+                    (format "%s (%s/sec)" (long-fmt %1) (rate %2))
+                    (long-fmt %1))]
+  (defn format-val
+    "String formatter for region properties"
+    [type val & [props]]
     (case type
-      :start-key                ["Start key"  (hbase/byte-array->str val)]
-      :end-key                  ["End key"    (hbase/byte-array->str val)]
+      :start-key                ["Start key"  (util/byte-array->str val)]
+      :end-key                  ["End key"    (util/byte-array->str val)]
       :regions                  ["Regions"    (long-fmt val)]
       :store-files              ["Storefiles" (long-fmt val)]
       :store-file-size-mb       ["Data size"
@@ -55,7 +50,7 @@
                                      (format "%s / %s (%.2f%%)"
                                              (mb val) (mb uncmp)
                                              (double (/ val uncmp 0.01)))
-                                     (format "%s / %s" (mb val) (mb uncmp)))
+                                     (str (mb val) " / " (mb uncmp)))
                                    (mb val))]
       :locality                 ["Locality"     (str (int val) " %")]
       :store-file-index-size-mb ["Index"        (mb val)]
@@ -67,7 +62,7 @@
       :root-index-size-kb       ["Root index"   (kb val)]
       :bloom-size-kb            ["Bloom filter" (kb val)]
       :total-index-size-kb      ["Total index"  (kb val)]
-      :compaction               ["Compaction"   (apply format "%s / %s" (map long-fmt val))]
+      :compaction               ["Compaction"   (str/join " / " (map long-fmt val))]
       :used-heap-mb             ["Used heap"    (mb val)]
       :max-heap-mb              ["Max heap"     (mb val)]
       [(util/keyword->str (str type))
@@ -156,7 +151,7 @@
   "Returns an updated map with start-key and end-key as strings"
   [region]
   (reduce (fn [region prop]
-            (update region prop hbase/byte-array->str))
+            (update region prop util/byte-array->str))
           region
           [:start-key :end-key]))
 

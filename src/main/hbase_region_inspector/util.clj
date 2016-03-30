@@ -2,6 +2,26 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]))
 
+(let [hex-chars ^chars (into-array Character/TYPE
+                            (mapcat #(map char (range (int (key %))
+                                                      (inc (int (val %)))))
+                                    {\0 \9 \A \F}))]
+  (defn byte-array->str
+    "Returns the string representation of a bytes array"
+    [^bytes buf]
+    (let [len (count buf)
+          sb  (StringBuilder.)]
+      (dotimes [idx len]
+        (let [ch  (aget buf idx)
+              chi (bit-and 0xff ch)]
+          (if (and (<= 32 chi 126) (not= 92 chi))
+            (.append sb (char ch))
+            (do
+              (.append sb "\\x")
+              (.append sb (aget hex-chars (quot chi 0x10)))
+              (.append sb (aget hex-chars (mod  chi 0x10)))))))
+      (str sb))))
+
 (defn compare-server-names
   "Comparator function for server names. Pads numbers with zeros"
   [left right]
