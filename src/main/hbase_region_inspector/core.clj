@@ -9,7 +9,7 @@
             [ring.middleware.gzip :refer [wrap-gzip]]
             [compojure.core :refer [defroutes GET PUT routes wrap-routes]]
             [compojure.route :as route]
-            [hiccup.core :as h]
+            [hiccup.util :refer [escape-html]]
             [selmer.parser :refer [render-file]]
             [hbase-region-inspector.hbase :as hbase]
             [hbase-region-inspector.util :as util]
@@ -73,22 +73,24 @@
   [title keys props]
   (let [has-locality (:has-locality @cached)
         {:keys [table encoded-name]} props]
-    (h/html
+    (str
       title
-      [:table {:class "table table-condensed table-striped"}
-       [:tbody
-        (map #(let [[k v] (format-val % (% props) props)]
-                [:tr [:th {:class "col-xs-2"} k] [:td v]])
-             (filter #(and (% props)
-                           ;; Ignore locality if not available
-                           (or has-locality (not= % :locality))) keys))]])))
+      "<table class=\"table table-condensed table-striped\"><tbody>"
+      (apply str
+             (map #(let [[k v] (format-val % (% props) props)]
+                     (str "<tr><th class=\"col-xs-2\">" k "</th><td>" (escape-html v) "</td></tr>"))
+                  (filter #(and (% props)
+                                ;; Ignore locality if not available
+                                (or has-locality (not= % :locality))) keys)))
+      "</tbody></table>")))
 
 (defn build-region-popover
   "Builds a small HTML snippet for each region to be used in bootstrap popover"
   [props]
   (let [{:keys [table encoded-name]} props]
     (build-popover
-      [:h3 table " " [:small encoded-name]]
+      (str "<h3>" (escape-html table)
+           " <small>" (escape-html encoded-name) "</small></h3>")
       [:server
        :start-key :end-key
        :store-file-size-mb
@@ -105,7 +107,7 @@
   "Builds a small HTML snippet for each server to be used in bootstrap popover"
   [props]
   (build-popover
-    [:h3 (:name props)]
+    (str "<h3>" (escape-html (:name props)) "</h3>")
     [:regions
      :store-files
      :store-file-size-mb
@@ -119,7 +121,7 @@
   "Builds a small HTML snippet for each table to be used in bootstrap popover"
   [props]
   (build-popover
-    [:h3 (:name props)]
+    (str "<h3>" (escape-html (:name props)) "</h3>")
     [:regions
      :store-files
      :store-file-size-mb
@@ -198,12 +200,12 @@
                            #(reduce - 0 (map metric (val %)))
                            (group-by :table all-regions)))
 
-        ;; Tables to show
-        visible-tables (set (if (seq tables) tables all-tables))
-
         ;; Filter regions by table name
         visible-regions (map byte-buffers->str
-                             (filter #(visible-tables (:table %)) all-regions))
+                             (if (seq tables)
+                               (let [tables (set tables)]
+                                 (filter #(tables (:table %)) all-regions))
+                               all-regions))
 
         ;; Group by server, sort the pairs, build a list of maps with :name and :regions
         grouped (map #(zipmap [:name :regions] %)
@@ -211,13 +213,14 @@
                               (merge (zipmap (keys servers) (repeat []))
                                      (group-by :server visible-regions))))
         ;; Function to sort the regions in the descending order
+        all-tables-ordered (zipmap all-tables (iterate inc 0))
         score-fn #(vector (- (metric %))
-                          (.indexOf all-tables (:table %)))
+                          (all-tables-ordered (:table %)))
         sort-fn (if (= sort :metric)
                   (fn [regions] (sort-by score-fn regions))
                   (fn [regions] (sort-by (comp vec reverse score-fn) regions)))
         ;; Sort the regions in each server
-        grouped (pmap #(update % :regions sort-fn) grouped)
+        grouped (map #(update % :regions sort-fn) grouped)
         ;; Find the local sum of the metric of each region
         grouped (map #(assoc % :sum (reduce + (filter pos? (map metric (:regions %)))))
                      grouped)
@@ -326,14 +329,16 @@
                           new-val (metric region)
                           old-val (or (get-in old-regions [name metric]) new-val)]
                       (/ (- new-val old-val) interval 0.001))))
-        new-regions (pmap #(assoc
-                             %
-                             :requests-rate       (diff-fn % :requests)
-                             :write-requests-rate (diff-fn % :write-requests)
-                             :read-requests-rate  (diff-fn % :read-requests)
-                             :compaction          ((juxt :compacted-kvs :total-compacting-kvs) %))
+        new-regions (pmap #(let [updated
+                                 (assoc
+                                   %
+                                   :requests-rate       (diff-fn % :requests)
+                                   :write-requests-rate (diff-fn % :write-requests)
+                                   :read-requests-rate  (diff-fn % :read-requests)
+                                   :compaction          ((juxt :compacted-kvs
+                                                               :total-compacting-kvs) %))]
+                             (assoc updated :html (build-region-popover updated)))
                           new-regions)
-        new-regions (pmap #(assoc % :html (build-region-popover %)) new-regions)
         group-by-server (group-by :server new-regions)
         servers (into {} (for [[k v] servers]
                            (let [v (merge v (calculate-locality (group-by-server k)))]
