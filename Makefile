@@ -4,11 +4,14 @@ all: build release
 
 build: js test lint bin
 
-js:
-	npm install
-	node_modules/.bin/bower install
+js: bower_components resources/public/js/core.js
 	node_modules/.bin/gulp
-	node_modules/.bin/jsx --extension jsx resources/jsx/ resources/public/js/
+
+node_modules: package.json
+	npm install
+
+bower_components: node_modules bower.json
+	node_modules/.bin/bower install
 
 bin:
 	lein with-profile $(profile) bin
@@ -25,12 +28,15 @@ lint: cljlint jslint
 cljlint:
 	lein with-profile $(profile),$(profile)-test eastwood "{:exclude-linters [:deprecations]}"
 
-jslint:
+resources/public/js/core.js: resources/jsx/core.jsx
+	node_modules/.bin/babel resources/jsx/core.jsx --out-file $@
+
+jslint: js
 	node_modules/.bin/standard resources/jsx/core.jsx
 
 serve:
-	-killall -9 jsx
-	node_modules/.bin/jsx --extension jsx --watch resources/jsx/ resources/public/js/ &
+	-killall -9 babel
+	node_modules/.bin/babel --watch resources/jsx/ --out-file resources/public/js/core.js &
 	DEBUG=1 lein with-profile $(profile),$(profile)-test,user ring server-headless
 
 test:

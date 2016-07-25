@@ -2,11 +2,12 @@
   "repository": "junegunn/hbase-region-inspector",
   "license": "Apache License 2.0",
   "devDependencies": {
-    "bower": "~1.4.1",
+    "babel-cli": "^6.11.4",
+    "babel-preset-react": "^6.11.1",
+    "bower": "^1.7.9",
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
     "gulp-rename": "^1.2.2",
-    "react-tools": "^0.13.3",
     "standard": "^5.3.1"
   }
 }
