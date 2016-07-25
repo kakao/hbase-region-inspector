@@ -1,4 +1,4 @@
-(def project-version "0.3.4")
+(def project-version "0.3.5")
 (def current :1.0)
 (defn bin [profile]
   (str "hbase-region-inspector-" project-version (when (not= profile current)
