@@ -6,7 +6,7 @@ var base = 'bower_components/**/'
 
 gulp.task('default', function() {
   gulp.src(['dist/jquery', 'jquery-ui', 'react', 'react-dom', 'husl', 'spin',
-            'bootstrap'].map(function(n) { return base + n + '.min.js' })
+            'bootstrap', 'html2canvas'].map(function(n) { return base + n + '.min.js' })
            .concat([base + 'underscore-min.js']))
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('resources/public/js/'))

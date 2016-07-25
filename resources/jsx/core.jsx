@@ -1,5 +1,5 @@
 var _admin, _condensed, _interval, _rs_port, _tables, _zookeeper, _locality
-var _, $, React, ReactDOM, Spinner
+var _, $, React, ReactDOM, Spinner, html2canvas
 
 var refresh = {
   version: 0,
@@ -54,7 +54,7 @@ function fire () {
   refresh.job()
 }
 
-function toggle_refresh () {
+function toggleRefresh () {
   var t = $('.resume-btn span')
   if (refresh.paused) {
     refresh.resume()
@@ -63,6 +63,15 @@ function toggle_refresh () {
     refresh.pause()
     t.removeClass('glyphicon-pause').addClass('glyphicon-play')
   }
+}
+
+function exportPNG () {
+  $('.resume-btn').hide()
+  $('.refresh_msg').text(new Date().toISOString())
+  html2canvas($('#app')[0]).then(function (canvas) {
+    $('.resume-btn').show()
+    window.open(canvas.toDataURL('image/png'), '_blank')
+  })
 }
 
 function fmt (val) {
@@ -351,6 +360,9 @@ var App = React.createClass({
                 <li className={this.props.menu === 'regions' ? 'active' : ''}>
                   <a href='#regions'>Regions</a>
                 </li>
+                <li>
+                  <a id='export' onClick={exportPNG}>PNG</a>
+                </li>
               </ul>
 
               <ul className='nav navbar-nav navbar-right'>
@@ -361,7 +373,7 @@ var App = React.createClass({
             </div>
           </div>
         </nav>
-        <div className='container'>
+        <div id='app' className='container'>
           {this.props.menu === 'error' ? (
             <div className='alert alert-danger' role='alert'>
               <h5>
@@ -619,7 +631,7 @@ var MetricsTab = React.createClass({
                 )
               }, this)}
             <li className='navbar-right disabled'>
-              <a className='resume-btn' href='javascript:void(0)' onClick={toggle_refresh}>
+              <a className='resume-btn' href='javascript:void(0)' onClick={toggleRefresh}>
                 <span className={'glyphicon glyphicon-' + (refresh.paused ? 'play' : 'pause')} aria-hidden='true'></span>
               </a>
             </li>

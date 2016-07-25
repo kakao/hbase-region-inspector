@@ -153,3 +153,7 @@ i.text-muted {
 body {
   padding-bottom: 40px;
 }
+
+#export {
+  cursor: pointer;
+}
