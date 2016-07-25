@@ -34,7 +34,7 @@ resources/public/js/core.js: resources/jsx/core.jsx
 jslint: js
 	node_modules/.bin/standard resources/jsx/core.jsx
 
-serve:
+serve: js
 	-killall -9 babel
 	node_modules/.bin/babel --watch resources/jsx/ --out-file resources/public/js/core.js &
 	DEBUG=1 lein with-profile $(profile),$(profile)-test,user ring server-headless
