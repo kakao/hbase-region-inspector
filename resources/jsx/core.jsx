@@ -203,7 +203,7 @@ function startDrop (callback) {
         }
 
         $.ajax({
-          url: '/move_region',
+          url: './move_region',
           method: 'PUT',
           data: {
             src: src,
@@ -243,7 +243,7 @@ function refreshApp (menu, opts) {
   clearTimeout(refresh.timeout)
   refresh.version++
 
-  var url = menu === 'servers' ? '/server_regions.json' : '/table_regions.json'
+  var url = menu === 'servers' ? './server_regions.json' : './table_regions.json'
   var currentVersion = refresh.version
   debug(opts)
   $.ajax({
@@ -342,7 +342,7 @@ var App = React.createClass({
         <nav className='navbar navbar-default' role='navigation'>
           <div className='container'>
             <div className='navbar-header'>
-              <a className='navbar-brand' href='/'>
+              <a className='navbar-brand' href='./'>
                 <span className='glyphicon glyphicon-align-left' aria-hidden='true'></span>
               </a>
               <a className='navbar-brand' href='#servers'>
