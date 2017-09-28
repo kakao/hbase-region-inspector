@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
 profile=${1:-1.0}
+target="{bottom-right}"
 
 if [ -z "$TMUX" ]; then
   echo Requires tmux
   exit 1
 fi
 
-if [ $(tmux list-panes | wc -l) -ne 1 ]; then
+if [ "$(tmux list-panes | wc -l)" -ne 1 ]; then
   echo Too many panes already
   exit 1
 fi
 
 tmux split-window -d -h "make autotest profile=$profile; bash"
 
-tmux split-window -t .1 -d -p 80 "make serve profile=$profile; bash"
+tmux split-window -t "$target" -d -p 80 "make serve profile=$profile; bash"
 echo -n "Waiting for nREPL to start "
-while ! tmux capture-pane -t .1 -p | grep 'Started nREPL' > /dev/null; do
+while ! tmux capture-pane -t "$target" -p | grep 'Started nREPL' > /dev/null; do
   echo -n .
   sleep 1
 done
 echo
 
-tmux split-window -t .1 -d -p 75 "make repl profile=$profile; bash"
+tmux split-window -t "$target" -d -p 75 "make repl profile=$profile; bash"
 echo -n "Waiting for user prompt "
-while ! tmux capture-pane -t .1 -p | grep '^user=>' > /dev/null; do
+while ! tmux capture-pane -t "$target" -p | grep '^user=>' > /dev/null; do
   echo -n .
   sleep 1
 done
 echo
 
-tmux send-keys -t .1 "(in-ns 'hbase-region-inspector.core)" Enter
-tmux send-keys -t .1 "(require '[clojure.pprint :refer [pprint]])" Enter
-tmux send-keys -t .1 "(reset! config (config/parse \"localhost\"))" Enter
-
+tmux send-keys -t "$target" "(in-ns 'hbase-region-inspector.core)" Enter
+tmux send-keys -t "$target" "(require '[clojure.pprint :refer [pprint]])" Enter
+tmux send-keys -t "$target" "(reset! config (config/parse \"localhost\"))" Enter
