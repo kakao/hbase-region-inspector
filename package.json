@@ -8,6 +8,7 @@
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
     "gulp-rename": "^1.2.2",
+    "natives": "^1.1.6",
     "standard": "^5.3.1"
   }
 }
