@@ -5,6 +5,8 @@
   (:import org.apache.hadoop.hbase.client.HConnectionManager
            org.apache.hadoop.hbase.client.HTable
            org.apache.hadoop.hbase.util.Bytes
+           org.apache.hadoop.hbase.HServerLoad
+           org.apache.hadoop.hbase.HServerLoad$RegionLoad
            java.nio.ByteBuffer))
 
 ;; http://archive.cloudera.com/cdh4/cdh/4/hbase-0.94.15-cdh4.7.1/apidocs/index.html
@@ -17,14 +19,44 @@
 
 (defn load->map
   "Builds map from RegionLoad"
-  [load]
-  (assoc (base/load->map load)
+  [^HServerLoad$RegionLoad load]
+  (assoc {:compacted-kvs              (.getCurrentCompactedKVs load)
+          :memstore-size-mb           (.getMemStoreSizeMB load)
+          :read-requests              (.getReadRequestsCount load)
+          :requests                   (.getRequestsCount load)
+          :root-index-size-kb         (.getRootIndexSizeKB load)
+          :store-file-index-size-mb   (.getStorefileIndexSizeMB load)
+          :store-files                (.getStorefiles load)
+          :store-file-size-mb         (.getStorefileSizeMB load)
+          :stores                     (.getStores load)
+          ; :store-uncompressed-size-mb
+          :total-compacting-kvs       (.getTotalCompactingKVs load)
+          :bloom-size-kb              (.getTotalStaticBloomSizeKB load)
+          :total-index-size-kb        (.getTotalStaticIndexSizeKB load)
+          :write-requests             (.getWriteRequestsCount load)}
          :store-uncompressed-size-mb
          (->> load
               str
               (re-find #"storefileUncompressedSizeMB=([0-9]+)")
               last
               Integer/parseInt)))
+
+(defn server-load->map
+  "Transforms ServerLoad object into clojure map"
+  [^HServerLoad load]
+  (assoc
+    {:max-heap-mb        (.getMaxHeapMB load)
+     :used-heap-mb       (.getUsedHeapMB load)
+     :regions            (.getNumberOfRegions load)
+     :requests-rate      (.getNumberOfRequests load)
+     :store-files        (.getStorefiles load)
+     :store-file-size-mb (.getStorefileSizeInMB load)}
+    :store-uncompressed-size-mb
+    (some->> load
+             str
+             (re-find #"storefileUncompressedSizeMB=([0-9]+)")
+             last
+             Integer/parseInt)))
 
 ;; Get HRegionInfo from HBaseAdmin
 (defn- region-locations

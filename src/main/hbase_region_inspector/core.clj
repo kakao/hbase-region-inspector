@@ -441,7 +441,7 @@
          (throw (Exception. "Read-only mode. Not allowed.")))
        (hbase/with-admin
          [admin @config]
-         (.move ^org.apache.hadoop.hbase.client.Admin admin (.getBytes ^String region) (.getBytes ^String dest))
+         (.move ^org.apache.hadoop.hbase.client.HBaseAdmin admin (.getBytes ^String region) (.getBytes ^String dest))
          (loop [tries 20
                 message (format "Moving %s from %s to %s" region src dest)]
            (util/info message)
