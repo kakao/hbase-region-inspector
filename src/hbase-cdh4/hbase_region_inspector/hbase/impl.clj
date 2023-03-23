@@ -5,6 +5,7 @@
   (:import org.apache.hadoop.hbase.client.HConnectionManager
            org.apache.hadoop.hbase.client.HTable
            org.apache.hadoop.hbase.util.Bytes
+           org.apache.hadoop.hbase.client.HBaseAdmin
            org.apache.hadoop.hbase.HServerLoad
            org.apache.hadoop.hbase.HServerLoad$RegionLoad
            java.nio.ByteBuffer))
@@ -127,3 +128,8 @@
     (for [region->info aggregated
           [k v] region->info]
       (assoc v :name (util/byte-array->str (.array k))))))
+
+(defn connect-admin
+  "Creates HBaseAdmin instance with the given configuration."
+  [conf]
+  (HBaseAdmin. conf))

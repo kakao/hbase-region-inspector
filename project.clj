@@ -1,4 +1,4 @@
-(def project-version "0.3.8")
+(def project-version "0.3.9")
 (def current :1.0)
 (defn bin [profile]
   (str "hbase-region-inspector-" project-version (when (not= profile current)
@@ -67,5 +67,14 @@
                  :source-paths ["src/hbase-1.0"]
                  :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
                                 [org.apache.hbase/hbase-common "1.0.0"]
+                                [org.apache.zookeeper/zookeeper "3.5.7"]]}
+   :2.5-test {:dependencies [[org.apache.hbase/hbase-testing-util "2.5.3"]]}
+   :2.5 ^:leaky {:bin {:name ~(bin :2.5)}
+                 :jar-name ~(jar :2.5)
+                 :uberjar-name ~(jar :2.5 "-standalone")
+                 :target-path  "target/2.5"
+                 :source-paths ["src/hbase-2.5"]
+                 :dependencies [[org.apache.hbase/hbase-client "2.5.3"]
+                                [org.apache.hbase/hbase-common "2.5.3"]
                                 [org.apache.zookeeper/zookeeper "3.5.7"]]}
    :uberjar {:aot :all}})
