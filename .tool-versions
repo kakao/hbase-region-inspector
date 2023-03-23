@@ -1,0 +1,6 @@
+java zulu-8.68.0.21
+
+nodejs 19.8.1
+
+# https://github.com/technomancy/leiningen/issues/2513
+leiningen 2.8.2
