@@ -1,4 +1,4 @@
-(def project-version "0.3.7")
+(def project-version "0.3.8")
 (def current :1.0)
 (defn bin [profile]
   (str "hbase-region-inspector-" project-version (when (not= profile current)
@@ -29,7 +29,7 @@
             [codox "0.8.12"]           ; lein doc
             [com.jakemccrary/lein-test-refresh "0.10.0"]
             [lein-pprint "1.1.2"]      ; lein pprint
-            [jonase/eastwood "0.2.1"]] ; lein eastwood
+            [jonase/eastwood "1.3.0"]] ; lein eastwood
   :ring {:handler hbase-region-inspector.core/app
          :nrepl {:start? true :port 9999}}
   :jvm-opts ["-Xmx2g" "-Dclojure.compiler.direct-linking=true"]
@@ -66,5 +66,6 @@
                  :target-path  "target/1.0"
                  :source-paths ["src/hbase-1.0"]
                  :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
-                                [org.apache.hbase/hbase-common "1.0.0"]]}
+                                [org.apache.hbase/hbase-common "1.0.0"]
+                                [org.apache.zookeeper/zookeeper "3.5.7"]]}
    :uberjar {:aot :all}})

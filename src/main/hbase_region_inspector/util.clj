@@ -35,11 +35,11 @@
   []
   (let [addrs (->> (java.net.NetworkInterface/getNetworkInterfaces)
                    enumeration-seq
-                   (filter #(.isUp %))
-                   (remove #(.isLoopback %))
-                   (mapcat #(enumeration-seq (.getInetAddresses %)))
+                   (filter #(.isUp ^java.net.NetworkInterface %))
+                   (remove #(.isLoopback ^java.net.NetworkInterface %))
+                   (mapcat #(enumeration-seq (.getInetAddresses ^java.net.NetworkInterface %)))
                    (filter #(instance? java.net.Inet4Address %))
-                   (map #(.getHostAddress %)))]
+                   (map #(.getHostAddress ^java.net.InetAddress %)))]
     (if (empty? addrs) ["127.0.0.1"] addrs)))
 
 (defn keyword->str

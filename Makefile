@@ -25,8 +25,13 @@ repl:
 
 lint: cljlint jslint
 
+
 cljlint:
-	lein with-profile $(profile),$(profile)-test eastwood "{:exclude-linters [:deprecations]}"
+ifeq ($(profile), cdh4)
+		lein with-profile $(profile),$(profile)-test eastwood "{:exclude-linters [:deprecations :reflection]}"
+else
+		lein with-profile $(profile),$(profile)-test eastwood "{:exclude-linters [:deprecations]}"
+endif
 
 resources/public/js/core.js: resources/jsx/core.jsx
 	node_modules/.bin/babel resources/jsx/core.jsx --out-file $@

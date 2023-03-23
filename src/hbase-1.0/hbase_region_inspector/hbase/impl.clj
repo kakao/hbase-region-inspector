@@ -4,7 +4,7 @@
             [hbase-region-inspector.hbase.base :as base])
   (:import [org.apache.hadoop.hbase
             util.Bytes client.Admin
-            HRegionInfo RegionLoad ClusterStatus ServerName]
+            HRegionInfo RegionLoad ClusterStatus ServerName ServerLoad]
            java.nio.ByteBuffer))
 
 ;; http://archive.cloudera.com/cdh5/cdh/5/hbase-0.98.6-cdh5.3.3/apidocs/index.html
@@ -18,12 +18,42 @@
 (defn load->map
   "Builds map from RegionLoad"
   [^RegionLoad load]
-  (let [base (base/load->map load)
+  (let [base {:compacted-kvs              (.getCurrentCompactedKVs load)
+              :memstore-size-mb           (.getMemStoreSizeMB load)
+              :read-requests              (.getReadRequestsCount load)
+              :requests                   (.getRequestsCount load)
+              :root-index-size-kb         (.getRootIndexSizeKB load)
+              :store-file-index-size-mb   (.getStorefileIndexSizeMB load)
+              :store-files                (.getStorefiles load)
+              :store-file-size-mb         (.getStorefileSizeMB load)
+              :stores                     (.getStores load)
+              ; :store-uncompressed-size-mb
+              :total-compacting-kvs       (.getTotalCompactingKVs load)
+              :bloom-size-kb              (.getTotalStaticBloomSizeKB load)
+              :total-index-size-kb        (.getTotalStaticIndexSizeKB load)
+              :write-requests             (.getWriteRequestsCount load)}
         loc  (.getDataLocality load)]
     (assoc base
       :store-uncompressed-size-mb (.getStoreUncompressedSizeMB load)
       :locality (* 100 loc)
       :local-size-mb (* loc (:store-file-size-mb base)))))
+
+(defn server-load->map
+  "Transforms ServerLoad object into clojure map"
+  [^ServerLoad load]
+  (assoc
+    {:max-heap-mb        (.getMaxHeapMB load)
+     :used-heap-mb       (.getUsedHeapMB load)
+     :regions            (.getNumberOfRegions load)
+     :requests-rate      (.getNumberOfRequests load)
+     :store-files        (.getStorefiles load)
+     :store-file-size-mb (.getStorefileSizeInMB load)}
+    :store-uncompressed-size-mb
+    (some->> load
+             str
+             (re-find #"storefileUncompressedSizeMB=([0-9]+)")
+             last
+             Integer/parseInt)))
 
 (defn- online-regions
   "Retrieves the information of online regions using HBaseAdmin.getOnlineRegions"

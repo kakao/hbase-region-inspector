@@ -8,23 +8,6 @@
            org.apache.hadoop.security.UserGroupInformation
            org.apache.hadoop.conf.Configuration))
 
-(defn server-load->map
-  "Transforms ServerLoad object into clojure map"
-  [load]
-  (assoc
-    {:max-heap-mb        (.getMaxHeapMB load)
-     :used-heap-mb       (.getUsedHeapMB load)
-     :regions            (.getNumberOfRegions load)
-     :requests-rate      (.getNumberOfRequests load)
-     :store-files        (.getStorefiles load)
-     :store-file-size-mb (.getStorefileSizeInMB load)}
-    :store-uncompressed-size-mb
-    (some->> load
-             str
-             (re-find #"storefileUncompressedSizeMB=([0-9]+)")
-             last
-             Integer/parseInt)))
-
 (defn- collect-server-info
   "Collects server statistics"
   [^ClusterStatus cluster-status]
@@ -35,21 +18,21 @@
       (map (fn [[name load]]
              (let [name (str name)]
                [name
-                (assoc (server-load->map load) :name name)]))
+                (assoc (hbase-impl/server-load->map load) :name name)]))
            (zipmap server-names server-loads)))))
 
 (defn collect-region-info
   "Collects the region information. You can pass ClusterStatus object to avoid
   repetitive creation of it."
   ([admin]
-   (hbase-impl/collect-region-info admin (.getClusterStatus admin)))
+   (hbase-impl/collect-region-info admin (.getClusterStatus ^HBaseAdmin admin)))
   ([admin cluster-status]
    (hbase-impl/collect-region-info admin cluster-status)))
 
 (defn collect-info
   "Collects server and region statistics"
   [admin]
-  (let [cluster-status (.getClusterStatus admin)]
+  (let [cluster-status (.getClusterStatus ^HBaseAdmin admin)]
     {:servers      (doall (collect-server-info cluster-status))
      :regions      (doall (collect-region-info admin cluster-status))
      :has-locality (-> (.getHBaseVersion cluster-status) first (not= \0))}))
@@ -120,4 +103,4 @@
   "Evaluates body with HBaseAdmin created with conf bound to name and
   finally closes it."
   [[name conf] & body]
-  `(with-open [~name (~connect-admin ~conf)] ~@body))
+  `(with-open [~name ^HBaseAdmin (~connect-admin ~conf)] ~@body))
