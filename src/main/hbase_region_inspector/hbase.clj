@@ -93,11 +93,9 @@
   (.getInt (build-hbase-conf conf) "hbase.regionserver.info.port" 60030))
 
 (defn connect-admin
-  "Creates HBaseAdmin instance with the given configuration.
-  TODO: HBaseAdmin is deprecated in favor of Admin in the recent versions of
-  HBase"
+  "Creates HBaseAdmin instance with the given configuration."
   [conf]
-  (HBaseAdmin. (build-hbase-conf conf)))
+  (hbase-impl/connect-admin (build-hbase-conf conf)))
 
 (defmacro with-admin
   "Evaluates body with HBaseAdmin created with conf bound to name and

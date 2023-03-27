@@ -1,5 +1,5 @@
 (def project-version "0.3.8")
-(def current :1.0)
+(def current :hbase1)
 (defn bin [profile]
   (str "hbase-region-inspector-" project-version (when (not= profile current)
                                                    (str "-" (name profile)))))
@@ -49,7 +49,7 @@
                   :jar-name ~(jar :cdh4)
                   :uberjar-name ~(jar :cdh4 "-standalone")
                   :target-path  "target/cdh4"
-                  :source-paths ["src/hbase-cdh4"]
+                  :source-paths ["src/cdh4"]
                   ;; lein with-profile cdh4 deps :tree
                   :dependencies [[org.apache.hbase/hbase "0.94.15-cdh4.7.1"
                                   :exclusions
@@ -59,13 +59,26 @@
                                   [javax.xml.bind/jaxb-api org.slf4j/slf4j-api org.slf4j/slf4j-log4j12]]
                                  [org.slf4j/slf4j-api "1.7.12"]
                                  [org.slf4j/slf4j-log4j12 "1.7.12"]]}
-   :1.0-test {:dependencies [[org.apache.hbase/hbase-testing-util "1.0.0"]]}
-   :1.0 ^:leaky {:bin {:name ~(bin :1.0)}
-                 :jar-name ~(jar :1.0)
-                 :uberjar-name ~(jar :1.0 "-standalone")
-                 :target-path  "target/1.0"
-                 :source-paths ["src/hbase-1.0"]
+   :hbase1-test {:dependencies [[org.apache.hbase/hbase-testing-util "1.0.0"]]}
+   :hbase1 ^:leaky {:bin {:name ~(bin :hbase1)}
+                 :jar-name ~(jar :hbase1)
+                 :uberjar-name ~(jar :hbase1 "-standalone")
+                 :target-path  "target/hbase1"
+                 :source-paths ["src/hbase1"]
                  :dependencies [[org.apache.hbase/hbase-client "1.0.0"]
                                 [org.apache.hbase/hbase-common "1.0.0"]
                                 [org.apache.zookeeper/zookeeper "3.5.7"]]}
+   :hbase2-test {:dependencies [[org.apache.hbase/hbase-testing-util "2.5.3"
+                              :exclusions [net.minidev/json-smart org.glassfish.web/javax.servlet.jsp]]]}
+   :hbase2 ^:leaky {:bin {:name ~(bin :hbase2)}
+                    :jar-name ~(jar :hbase2)
+                    :uberjar-name ~(jar :hbase2 "-standalone")
+                    :target-path  "target/hbase2"
+                    ;; No difference between hbase1 and hbase2
+                    :source-paths ["src/hbase1"]
+                    :dependencies [[org.apache.hbase/hbase-client "2.5.3"
+                                    :exclusions [net.minidev/json-smart]]
+                                   [org.apache.hbase/hbase-common "2.5.3"
+                                    :exclusions [net.minidev/json-smart]]
+                                   [org.apache.zookeeper/zookeeper "3.5.7"]]}
    :uberjar {:aot :all}})

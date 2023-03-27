@@ -1,4 +1,4 @@
-profile?=1.0
+profile?=hbase1
 
 all: build release
 
