@@ -62,11 +62,14 @@ brew install npm leiningen
 ### Build
 
 ```sh
-# For HBase 0.98 and above
+# For HBase 0.98 and above (profile=hbase1)
 make
 
 # HBase 0.94 (CDH4)
 make profile=cdh4
+
+# Build with HBase 2 dependencies
+make profile=hbase2
 ```
 
 ## License
